@@ -1,18 +1,37 @@
-// #include <string>
-// #include <set>
+#include <string>
+#include <set>
+#include <vector>
 
-// template <typename Node, typename I>
+template <typename N> struct Node {
+    N val;
+    std::vector<Node<N>*> in;
+    std::vector<Node<N>*> out;
 
-// class Dag {
+};
 
-//     public:
-//         int x;
+typedef struct Node Node;
 
-//     private:
-//         std::set<Node> nodes;
-//         std::set<Edge> edges;
+template <typename W> struct Edge {
+    Node* from;
+    Node* to;
+    W weight;
+};
+
+typedef struct Edge Edge;
+
+
+template <typename N, typename Weight> class Dag {
+
+    public:
+        Dag(Edge* edges);
     
-    
+    private:
+        std::set<Node<N>*> nodes;
+        std::set<Edge<Weight>*> edges;
+        int numNodes;
+        int numEdges;
 
-// };
+
+    
+};
 
