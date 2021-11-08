@@ -1,26 +1,18 @@
-#include <string>
-#include <set>
+// #include <string>
+// #include <set>
 
-template <typename N, typename I>
+// template <typename Node, typename I>
 
-class Dag {
+// class Dag {
 
-    class Edge {
+//     public:
+//         int x;
 
-        private:
-            N node1;
-            N node2;
-            I value;
-    };
-
-    public:
-        int x;
-
-    private:
-        std::set<N> nodes;
-        std::set<Edge> edges;
+//     private:
+//         std::set<Node> nodes;
+//         std::set<Edge> edges;
     
     
 
-};
+// };
 
