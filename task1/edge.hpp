@@ -17,10 +17,19 @@ template <typename N, typename W> class Edge {
             this->weight = weight;
         }
 
+
+        void printEdge() {
+            std::cout << "(" << from->val << ") --" << weight << "-> (" << to->val << ")" << std::endl;
+        }
+
+
         Node<N,W>* getFrom() {
             return this->from;
         }
         void setFrom(Node<N,W>* from) {
+            this->from->removeOut(this);
+            from->addOut(this);
+            
             this->from = from;
         }
         
@@ -28,6 +37,9 @@ template <typename N, typename W> class Edge {
             return this->to;
         }
         void setTo(Node<N,W>* to) {
+            this->to->removeIn(this);
+            to->addIn(this);
+            
             this->to = to;
         }
 

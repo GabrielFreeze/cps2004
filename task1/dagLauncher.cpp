@@ -1,12 +1,12 @@
 #include <iostream>
+#include <unordered_set>
 #include "dag.hpp"
 using namespace std;
 
 /*
-    TODO: Think if Edge should be a class or stay a struct.
     TODO: Implement checkCycles function.
     TODO: Optimise the 2 sets for nodes and edges.
-
+    TODO: Figure out ownership
 */
 
 
@@ -33,14 +33,14 @@ int main() {
     ⌞_____₁______⌟
     */
 
-    Node<char, int>* A = new Node<char, int>('A');
-    Node<char, int>* B = new Node<char, int>('B');
-    Node<char, int>* C = new Node<char, int>('C');
-
-
-    Edge<char, int>* edges[] =  {new Edge<char, int>(A,B, 1),
-                                new Edge<char, int>(B,C,2),
-                                new Edge<char, int>(C,A,1)};
+    Node<char, int>* A = new Node<char,int>('A');
+    Node<char, int>* B = new Node<char,int>('B');
+    Node<char, int>* C = new Node<char,int>('C');
+    
+    cout << endl;
+    Edge<char, int>* edges[] = {new Edge<char,int>(A,B,1),
+                                new Edge<char,int>(B,C,2),
+                                new Edge<char,int>(C,A,1)};
     
     int edgeNum = sizeof(edges)/sizeof(edges[0]);
 
@@ -52,8 +52,22 @@ int main() {
     dag.addEdge(new Edge<char,int>(A,B,1)); //Won't be added as an edge with the same values already exists.
     dag.addEdge(edges[2]);                  //Won't be added because edge was already added before.
 
-    
     dag.printEdges();
-    // cout << dag.addNode(D) << endl;
+
+
+
+    // dag.printEdges();
+    // unordered_set<char,int> outA = A->getOut();
+
+    // for (auto i = outA.begin(); i != outA.end(); i++){
+    //     unordered_set<char,int> outA2 = (*i)->getTo()->getOut();
+
+    //     for (auto j = outA2.begin(); j != outA2.end(); j++) {
+
+    //     }
+
+    // }
+        // std::cout << "(" << (*it)->from->val << ") --" << (*it)->weight << "-> (" << (*it)->to->val << ")" << std::endl;
+
 
 }

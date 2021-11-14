@@ -8,11 +8,17 @@ template <typename N, typename W> class Node {
     public:
 
         N val;
-
+        Node() {}
         Node(N val) {
             this->val = val;
         }
-    
+        std::unordered_set<Edge<N,W>*> getIn() {
+            return in;
+        }
+        std::unordered_set<Edge<N,W>*> getOut() {
+            return out;
+        }
+
     private:
         std::unordered_set<Edge<N,W>*> in;
         std::unordered_set<Edge<N,W>*> out;

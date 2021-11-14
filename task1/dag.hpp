@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <set>
 #include <vector>
 #include <unordered_set>
 #include "edge.hpp"
@@ -125,17 +124,6 @@ template <typename N, typename W> class Dag {
             return 0;
         }
 
-        // int addIn(Node<N,W>* node, Edge<N,W>* edge) {
-        //     return 1 - node->in.insert(edge).second; //Returns 0 if edge was added, 1 if edge was already present. 
-        // }
-        // int removeIn(Node<N,W>* node, Edge<N,W>* edge) {
-        //     return 1 - node->in.erase(edge); //Returns 0 if edge was removed, 1 if edge was not present.
-        // }
-        // int addOut(Node<N,W>* node, Edge<N,W>* edge) {
-        //     return 1 - node->out.insert(edge).second; //Returns 0 if edge was added, 1 if edge was already present. 
-        // }
-        // int removeOut(Node<N,W>* node, Edge<N,W>* edge) {
-        //     return 1 - node->out.erase(edge); //Returns 0 if edge was removed, 1 if edge was not present.
-        // }
+        
 
 };
