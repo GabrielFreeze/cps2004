@@ -5,8 +5,6 @@ using namespace std;
 /*
     TODO: Think if Edge should be a class or stay a struct.
     TODO: Implement checkCycles function.
-    TODO: Implement removeNode and removeEdge functions.
-    TODO: Function that checks for duplicate nodes
     TODO: Optimise the 2 sets for nodes and edges.
 
 */
@@ -35,40 +33,27 @@ int main() {
     ⌞_____₁______⌟
     */
 
-    Edge<char, int>* edges[3];
-
-    Edge<char, int> edge1;
-    Edge<char, int> edge2;
-    Edge<char, int> edge3;
-
-    edges[0] = &edge1;
-    edges[1] = &edge2;
-    edges[2] = &edge3;
+    Node<char, int>* A = new Node<char, int>('A');
+    Node<char, int>* B = new Node<char, int>('B');
+    Node<char, int>* C = new Node<char, int>('C');
 
 
-    Node<char, int> A;
-    Node<char, int> B;
-    Node<char, int> C;
-
-
-    A.val = 'A';
-    B.val = 'B';
-    C.val = 'C';
-
-
-    edges[0]->weight = 1;
-    edges[0]->from = &A;
-    edges[0]->to = &B;
-
-    edges[1]->weight = 2;
-    edges[1]->from = &B;
-    edges[1]->to = &C;
-
-    edges[2]->weight = 1;
-    edges[2]->from = &C;
-    edges[2]->to = &A;
+    Edge<char, int>* edges[] =  {new Edge<char, int>(A,B, 1),
+                                new Edge<char, int>(B,C,2),
+                                new Edge<char, int>(C,A,1)};
+    
+    int edgeNum = sizeof(edges)/sizeof(edges[0]);
 
     
-    Dag<char, int>* dag = new Dag<char, int>(edges, 3);
+    Dag<char, int> dag = Dag(edges, edgeNum);
+    
+
+    dag.addEdge(new Edge<char,int>(A,B,7)); //Will be added because it's unique.
+    dag.addEdge(new Edge<char,int>(A,B,1)); //Won't be added as an edge with the same values already exists.
+    dag.addEdge(edges[2]);                  //Won't be added because edge was already added before.
+
+    
+    dag.printEdges();
+    // cout << dag.addNode(D) << endl;
 
 }
