@@ -3,15 +3,20 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <unordered_set>
 
-template <typename N> struct Node {
+template <typename N, typename W> struct Edge;
+
+template <typename N, typename W> struct Node {
     N val;
+    std::unordered_set<Edge<N,W>*> in;
+    std::unordered_set<Edge<N,W>*> out;
 };
 
 
 template <typename N, typename W> struct Edge {
-    Node<N>* from;
-    Node<N>* to;
+    Node<N,W>* from;
+    Node<N,W>* to;
     W weight;
 };
 
@@ -19,86 +24,121 @@ template <typename N, typename W> struct Edge {
 template <typename N, typename W> class Dag {
 
     public:
-        Dag(Edge<N,W>** newEdges, int n_edges) {
+        Dag(Edge<N,W>** edges, int n_edges) {
             
             for (auto i = 0; i < n_edges; i++) {
-                addEdge(newEdges[i]); //Inserts a pointer to an edge into the set of edges.
+                addEdge(edges[i]); //Inserts a pointer to an edge into the set of edges.
                 
-                addNode(newEdges[i]->from); //Inserts the 'from' node into the set of nodes.
-                addNode(newEdges[i]->to);   //Inserts the 'to' node into the set of nodes. 
-            }
+                edges[i]->from->out.insert(edges[i]); //Let every node have a reference to the edges emerging from it.
+                edges[i]->to->in.insert(edges[i]); //Let every node have a reference to the edges incident to it.
 
+                addNode(edges[i]->from); //Inserts the 'from' node into the set of nodes.
+                addNode(edges[i]->to);   //Inserts the 'to' node into the set of nodes.
+
+            }
 
             checkCycle(); //TODO: Implement this
         };
 
-        std::set<Edge<N,W>*> getEdges() {
+        std::unordered_set<Edge<N,W>*> getEdges() {
             return edges;
         }
 
-        std::set<Node<N>*> getNodes() {
+        std::unordered_set<Node<N,W>*> getNodes() {
             return nodes;
         }
 
-
-        void printEdges() {
+        void printEdges() { //Prints all edges.
             for (auto it = edges.begin(); it != edges.end(); it++)
                 std::cout << (*it)->from->val << " " << (*it)->to->val << " " << (*it)->weight << std::endl;
         }
 
-        int addNode(Node<N>* newNode) {
+        int addNode(Node<N,W>* node) {
             
-            if (!newNode) throw std::invalid_argument("Argument passed is a Null Pointer");
-            
-            return nodes.insert(newNode).second;
+            /*A node with the same value to another node already in the graph may be added,
+            but a pointer to a node already in the set of nodes is not.*/
+
+            if (!node)
+                throw std::invalid_argument("Argument passed is a Null Pointer");
+
+            return 1 - nodes.insert(node).second; //Returns 0 if node was added, 1 if node was already in graph.
         }
-
-        int addEdge(Edge<N,W>* newEdge) {
-                
-            if (!newEdge)
-                throw std::invalid_argument("Argument passed is a Null Pointer.");
-
-            if (!newEdge->from || !newEdge->to)
-                throw std::invalid_argument("Node of new edge is a Null Pointer.");
-
-            if (!nodes.count(newEdge->from) || !nodes.count(newEdge->to))
-                throw std::invalid_argument("Nodes of new edge do not exist in the Graph.");
-        
-            return edges.insert(newEdge).second; 
-        }
-        
-        int removeNode(Node<N>* node) {
-
+       
+        int removeNode(Node<N,W>* node) { //Removing a node also meanns removing all edges connected to the node.
+            //TODO: Destroy node
             for (auto it = edges.begin(); it != edges.end(); it++) {
                 if ((*it)->from == node || (*it)->to == node) //Remove all edges connected to node.
-                    edges.erase(it--);
+                    removeEdge(it);
             }
             
-            return nodes.erase(node);//TODO: Abstract this out into a function.
+            return 1 - nodes.erase(node); //Returns 0 if node was removed, 1 if no node was removed.
+        }
+        
+        int addEdge(Edge<N,W>* edge) { //Adding an Edge also implies adding any new nodes connected to the edge.
+            
+            if (!edge)
+                throw std::invalid_argument("Argument passed is a Null Pointer.");
+
+            //Checks wether there is an identical edge already in the graph.
+            for (auto it = edges.begin(); it != edges.end(); it++) {
+                
+                if ((*it)->from == edge->from &&
+                    (*it)->to == edge->to     &&
+                    (*it)->weight == edge->weight) {
+                    
+                    return 1; //Returns 1 if edge was already in the set.
+                }     
+            }
+
+            /*Adds the nodes referenced by the edge to the graph.
+            Nodes could already be in the graph, so return type is not checked.*/
+            addNode(edge->from);
+            addNode(edge->to);
+            
+            addOut(edge->from, edge); //Make a reference to the new emergent edge to the FROM node.
+            addIn(edge->to, edge); //Make a reference to the new incident edge from the TO node.
+
+            return 1 - edges.insert(edge).second; //Returns 0 is edge was added, 1 if edge was already in the set.
         }
 
-        //TODO: Implement this function.
-        int connectNode(Node<N>* fromNode, Node<N>* toNode, W weight) {
+        int removeEdge(Edge<N,W>* edge) { //When an edge is removed, the 'from' and 'to' nodes are not removed.
+            //TODO: Destroy node
             
-            if (!fromNode || !toNode) throw std::invalid_argument("Argument passed is a Null Pointer.");
-            if (!nodes.count(fromNode) || !nodes.count(toNode)) throw std::invalid_argument("Node passed does not exist in the Graph.");
-            
+            //When an edge is removed, all references to that edge in a node must be removed as well.
+            for (auto node = nodes.begin(); node != nodes.end(); node++) {
+                
+                /*Small Optimisation: This if statement ensures that if an edge was removed from IN, 
+                we don't need to check for it in OUT.*/
+                if (removeIn(*node,edge))
+                    removeOut(*node,edge);
+            }
 
-            //Find a way to create a new edge and add it to the set of edges.
 
-
-            return 0;
+            return 1 - edges.erase(edge); //Returns 0 if edge was removed, 1 if edge was not present.
         }
 
-
-
+        
     private:
-        std::set<Node<N>*> nodes; //Set of all nodes.
-        std::set<Edge<N,W>*> edges; //Set of all edges.
+        std::unordered_set<Node<N,W>*> nodes; //Set of all nodes.
+        std::unordered_set<Edge<N,W>*> edges; //Set of all edges.
         int numNodes;
         int numEdges;
 
         int checkCycle() {
             return 0;
         }
+
+        int addIn(Node<N,W>* node, Edge<N,W>* edge) {
+            return 1 - node->in.insert(edge).second; //Returns 0 if edge was added, 1 if edge was already present. 
+        }
+        int removeIn(Node<N,W>* node, Edge<N,W>* edge) {
+            return 1 - node->in.erase(edge); //Returns 0 if edge was removed, 1 if edge was not present.
+        }
+        int addOut(Node<N,W>* node, Edge<N,W>* edge) {
+            return 1 - node->out.insert(edge).second; //Returns 0 if edge was added, 1 if edge was already present. 
+        }
+        int removeOut(Node<N,W>* node, Edge<N,W>* edge) {
+            return 1 - node->out.erase(edge); //Returns 0 if edge was removed, 1 if edge was not present.
+        }
+
 };
