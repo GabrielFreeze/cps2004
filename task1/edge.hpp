@@ -6,7 +6,7 @@ template <typename N, typename W> class Edge {
     friend class Dag<N, W>;
 
     public:
-
+        
         Node<N,W>* from;
         Node<N,W>* to;
         W weight;
