@@ -39,26 +39,41 @@ int main() {
     ⌞_____₁______⌟
     */
 
+
+
+
+
     Node<char, int>* A = new Node<char,int>('A');
     Node<char, int>* B = new Node<char,int>('B');
     Node<char, int>* C = new Node<char,int>('C');
     
+    unique_ptr<Edge<char, int>> edge1(new Edge<char, int>{A, B, 1});
+    unique_ptr<Edge<char, int>> edge2(new Edge<char, int>{B, C, 2});
+    unique_ptr<Edge<char, int>> edge3(new Edge<char, int>{C, A, 3});
+
+    Dag dag = Dag(move(edge1)); 
+
+
+
+
     cout << endl;
-    Edge<char, int>* edges[] = {new Edge<char,int>(A,B,1),
-                                new Edge<char,int>(B,C,2),
-                                new Edge<char,int>(C,A,1)};
+    // Edge<char, int>* edges[] = {new Edge<char,int>(A,B,1),
+    //                             new Edge<char,int>(B,C,2),
+    //                             new Edge<char,int>(C,A,1)};
     
-    int edgeNum = sizeof(edges)/sizeof(edges[0]);
+    // int edgeNum = sizeof(edges)/sizeof(edges[0]);
 
     
-    Dag<char, int> dag = Dag(edges, edgeNum);
+    // Dag<char, int> dag = Dag(edges, edgeNum);
     
 
-    dag.addEdge(new Edge<char,int>(A,B,7)); //Will be added because it's unique.
-    dag.addEdge(new Edge<char,int>(A,B,1)); //Won't be added as an edge with the same values already exists.
-    dag.addEdge(edges[2]);                  //Won't be added because edge was already added before.
+    // dag.addEdge(new Edge<char,int>(A,B,7)); //Will be added because it's unique.
+    // dag.addEdge(new Edge<char,int>(A,B,1)); //Won't be added as an edge with the same values already exists.
+    // dag.addEdge(edges[2]);                  //Won't be added because edge was already added before.
 
-    dag.printEdges();
+
+    
+    // dag.printEdges();
 
 
 

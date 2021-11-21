@@ -1,4 +1,4 @@
-template <typename N, typename W> class Edge;
+template <typename N, typename W> struct Edge;
 template <typename N, typename W> class Dag;
 
 template <typename N, typename W> class Node {
@@ -12,27 +12,30 @@ template <typename N, typename W> class Node {
         Node(N val) {
             this->val = val;
         }
-        std::unordered_set<Edge<N,W>*> getIn() {
+        std::unordered_set<Node<N,W>*> getIn() {
             return in;
         }
-        std::unordered_set<Edge<N,W>*> getOut() {
+        std::unordered_set<Node<N,W>*> getOut() {
             return out;
         }
 
     private:
-        std::unordered_set<Edge<N,W>*> in;
-        std::unordered_set<Edge<N,W>*> out;
+        std::unordered_set<Node<N,W>*> in;
+        std::unordered_set<Node<N,W>*> out;
 
-        int addIn(Edge<N,W>* edge) {
-            return 1 - in.insert(edge).second; //Returns 0 if edge was added, 1 if edge was already present. 
+        int addIn(Node<N,W>* node) {
+            return 1 - in.insert(node).second; //Returns 0 if node was new, 1 otherwise.
         }
-        int removeIn(Edge<N,W>* edge) {
-            return 1 - in.erase(edge); //Returns 0 if edge was removed, 1 if edge was not present.
+
+        int addOut(Node<N,W>* node) {
+            return 1 - out.insert(node).second; //Returns 0 if node was new, 1 otherwise.
         }
-        int addOut(Edge<N,W>* edge) {
-            return 1 - out.insert(edge).second; //Returns 0 if edge was added, 1 if edge was already present. 
+
+        int removeIn(Node<N,W>* node) {
+            return 1 - in.erase(node); //Returns 0 if node was erased, 1 otherwise.
         }
-        int removeOut(Edge<N,W>* edge) {
-            return 1 - out.erase(edge); //Returns 0 if edge was removed, 1 if edge was not present.
+
+        int removeOut(Node<N,W>* node) {
+            return 1 - out.erase(node); //Returns 0 if node was erased, 1 otherwise.
         }
 }; 
