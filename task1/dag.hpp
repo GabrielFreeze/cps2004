@@ -3,8 +3,15 @@
 #include <string>
 #include <vector>
 #include <unordered_set>
+#include <set>
+#include <memory>
 #include "edge.hpp"
 #include "node.hpp"
+
+// template <typename N, typename W>
+// using Edge_ = std::pair<std::unique_ptr<Node<N,W>>,std::unique_ptr<Node<N,W>>>;
+//using Edge_ = std::pair<std::shared_ptr<Node<N,W>>,std::shared_ptr<Node<N,W>>>;
+
 
 template <typename N, typename W> class Dag {
 
@@ -18,8 +25,8 @@ template <typename N, typename W> class Dag {
                 edges[i]->from->addOut(edges[i]);//Let every node have a reference to the edges emerging from it.
                 edges[i]->to->addIn(edges[i]);//Let every node have a reference to the edges incident to it.
 
-                // edges[i]->from->out.insert(edges[i]); //Let every node have a reference to the edges emerging from it.
-                // edges[i]->to->in.insert(edges[i]); //Let every node have a reference to the edges incident to it.
+                // edges[i]->from->out.insert(edges[i]);
+                // edges[i]->to->in.insert(edges[i]);
 
                 addNode(edges[i]->from); //Inserts the 'from' node into the set of nodes.
                 addNode(edges[i]->to);   //Inserts the 'to' node into the set of nodes.
@@ -28,6 +35,44 @@ template <typename N, typename W> class Dag {
 
             checkCycle(); //TODO: Implement this
         };
+
+
+
+        // //Returning a node should only return a reference to the node in the set of all nodes.
+
+        // int addNode(N value) {
+        //     //Create a new node with the value.
+        //     //Returns the index of the new node in the set of nodes.
+        // }
+
+        // int removeNode(int index) {
+        //     //Remove the node at the index from the set of nodes.
+        //     //Destroy the unique pointer to the node.
+        //     //Returns the index of the node that was removed.
+        // }
+
+
+
+        // N getValue(int index) { 
+        //     //Returns the value of the node at the given index.
+        // }
+
+
+        // int connect(int from, int to) { //Parameters are indices of nodes already present in the Dag.
+        //     //Check that the nodes are in the set of all nodes.
+        //     //Connect the 'from' node to the 'to' node.
+            
+        //     //Create a new edge between the two nodes.
+        // }
+
+        // int disconnect(int from, int to) {
+        //     //Check that the nodes are in the set of all nodes.
+        //     //Disconnect the 'from' node from the 'to' node.
+        // }
+
+
+
+
 
         std::unordered_set<Edge<N,W>*> getEdges() {
             return edges;
@@ -117,6 +162,10 @@ template <typename N, typename W> class Dag {
     private:
         std::unordered_set<Node<N,W>*> nodes; //Set of all nodes.
         std::unordered_set<Edge<N,W>*> edges; //Set of all edges.
+        
+        
+        // std::vector<std::unique_ptr<Node<N,W>>> _nodes; 
+        // std::set<std::unique_ptr<Node<N,W>>> _edges;
         int numNodes;
         int numEdges;
 

@@ -7,7 +7,13 @@ using namespace std;
     TODO: Implement checkCycles function.
     TODO: Optimise the 2 sets for nodes and edges.
     TODO: Figure out ownership
+    TODO: Deprecate edge class.
 */
+
+//Shared pointer of a unique pointer to a node.
+//Convert unique_ptr into shared_ptr once unqie_ptr is passed to Graph.
+
+
 
 
 
