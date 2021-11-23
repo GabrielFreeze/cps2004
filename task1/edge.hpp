@@ -1,10 +1,9 @@
-template <typename N, typename W> class Node;
-template <typename N, typename W> class Dag;
+template <typename N> class Node;
+template <typename N> class Dag;
 
 
-template <typename N, typename W> struct Edge {
+template <typename N> struct Edge {
     
-    Node<N,W> *from;
-    Node<N,W> *to;
-    W weight;
+    Node<N> *from;
+    Node<N> *to;
 };

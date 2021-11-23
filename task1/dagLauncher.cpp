@@ -43,17 +43,40 @@ int main() {
 
 
 
-    Node<char, int>* A = new Node<char,int>('A');
-    Node<char, int>* B = new Node<char,int>('B');
-    Node<char, int>* C = new Node<char,int>('C');
+    Node<char>* A = new Node<char>('A'); 
+    Node<char>* D = new Node<char>('D');
+    Node<char>* G = new Node<char>('G');
+    Node<char>* B = new Node<char>('B'); 
+    Node<char>* E = new Node<char>('E');
+    Node<char>* H = new Node<char>('H');
+    Node<char>* C = new Node<char>('C'); 
+    Node<char>* F = new Node<char>('F');
+    Node<char>* I = new Node<char>('I');
     
-    unique_ptr<Edge<char, int>> edge1(new Edge<char, int>{A, B, 1});
-    unique_ptr<Edge<char, int>> edge2(new Edge<char, int>{B, C, 2});
-    unique_ptr<Edge<char, int>> edge3(new Edge<char, int>{C, A, 3});
 
-    Dag dag = Dag(move(edge1)); 
+    unique_ptr<Edge<char>> edge1(new Edge<char>{A, B});
+    unique_ptr<Edge<char>> edge2(new Edge<char>{B, C});
+    unique_ptr<Edge<char>> edge3(new Edge<char>{C, A});
+    unique_ptr<Edge<char>> edge4(new Edge<char>{F, I});
+    unique_ptr<Edge<char>> edge5(new Edge<char>{I, B});
+    unique_ptr<Edge<char>> edge6(new Edge<char>{B, E});
+    unique_ptr<Edge<char>> edge7(new Edge<char>{E, G});
+    unique_ptr<Edge<char>> edge8(new Edge<char>{G, E});
+    unique_ptr<Edge<char>> edge9(new Edge<char>{E, H});
 
+    unique_ptr<Edge<char>> edges[9] = {move(edge1), move(edge2), move(edge3),
+                                       move(edge4), move(edge5), move(edge6),
+                                       move(edge7), move(edge8), move(edge9)};
+    // Dag dag = Dag(move(edge1));
+    Dag<char> dag = Dag<char>(edges, sizeof(edges)/sizeof(edges[0]));
 
+    dag.addNode(D);
+    dag.printTable();
+    dag.removeNode(D);
+    dag.printTable();
+    dag.removeEdge(E,G);
+    dag.printTable();
+    
 
 
     cout << endl;
