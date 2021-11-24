@@ -15,28 +15,41 @@ template <typename N> class Dag {
             //Add every edge to edges vector
             for (auto i = 0; i < size; i++){
                 addEdge(std::move(edges[i]));
-            }     
+            }
+            checkCycle();
         }
         Dag(std::unique_ptr<Edge<N>> edge) {
             addEdge(std::move(edge));
         }
         Dag(){};
 
-
         bool exists(Node<N>* node){
             return node->index > -1;
         }
 
         void printTable(){
+            std::cout << "FROM:" << " ";
+            for(int i = 0; i < numNodes; i++) {
+                std::cout << nodes[i]->val << " ";
+            }
+            std::cout << std::endl << "TO:";
+
             for (int i = 0; i < numNodes; i++) {
+                std::cout << std::endl << nodes[i]->val << "     ";
+
                 for (int j = 0; j < numNodes; j++) {
-                    std::cout << table.at(i).at(j) << " ";
+                    if (table[j][i]) std::cout << "X" << " ";
+                    else             std::cout << "O" << " ";
                 }
-                std::cout << std::endl ;
             }
             std::cout << std::endl;
         }
 
+        void addNode(Node<N>** nodes, int size) {
+            for (int i = 0; i < size; i++){
+                addNode(nodes[i]);
+            }
+        }
         int addNode(Node<N>* node) {
             if (!node) throw std::invalid_argument("Argument passed is a Null Pointer.");
            
@@ -56,7 +69,6 @@ template <typename N> class Dag {
             //Add reference to the new node
             table.push_back(nodeVec);
             
-
             //For every node, declare that it is not connected to the new node
             for (int i = 0; i < numNodes-1; i++) {
                 table[i].push_back(0);
@@ -64,8 +76,23 @@ template <typename N> class Dag {
 
             //The index of this new node should be equal to its position in nodes. 
             nodes.push_back(node);
+            checkCycle();
 
             return 0;
+        }
+
+        std::vector<Node<N>*> getSuccessors(Node<N>* node){
+            if (!exists(node)) throw std::invalid_argument("Node passed is a Null Pointer.");
+
+            std::vector<Node<N>*> children;
+            int index;
+
+            for (int i = 0; i < numNodes; i++) {
+                if ((index = table[node->index][i]))
+                    children.push_back(edges[index-1]->to);
+            }
+
+            return children;
         }
 
         int removeNode(Node<N>* node) {
@@ -74,6 +101,15 @@ template <typename N> class Dag {
             
             //Return -1 in case of non-existent node
             if (!exists(node)) return -1;
+
+            // //Remove any edges that relied on the node being deleted
+            for (auto it = edges.begin(); it != edges.end(); it++) {
+                if ((*it)->from == node || (*it)->to == node) {
+                    removeEdge((*it)->from, (*it)->to);
+                    it--;
+                }
+            }
+
 
             //Find index of the node to be removed
             int j;
@@ -95,7 +131,6 @@ template <typename N> class Dag {
             //Update numNodes
             numNodes--;
 
-
             //Remove node from vector of all nodes
             nodes.erase(nodes.begin()+j);
 
@@ -108,7 +143,27 @@ template <typename N> class Dag {
 
         }
         
-        //Returns an index to refer to the edge you added.
+        int addEdge(std::unique_ptr<Edge<N>>* edges, int size) {
+            for (auto i = 0; i < size; i++){
+                std::unique_ptr<Edge<N>> edge = std::move(edge[i]);
+
+                if (!edge) throw std::invalid_argument("Argument passed is a Null Pointer.");
+
+                //Ensures the nodes are added in the graph.
+                addNode(edge->from);
+                addNode(edge->to);
+
+                //Declare a connection between these nodes.
+                table[edge->from->index][edge->to->index] = ++numEdges;
+
+                //Move edge to vector of edges.
+                edges.push_back(std::move(edge));
+                
+                return numEdges;
+            }
+
+            checkCycle();
+        }
         int addEdge(std::unique_ptr<Edge<N>> edge){
             if (!edge) throw std::invalid_argument("Argument passed is a Null Pointer.");
 
@@ -122,6 +177,7 @@ template <typename N> class Dag {
             //Move edge to vector of edges.
             edges.push_back(std::move(edge));
             
+            checkCycle();
             return numEdges;
 
         }
@@ -149,18 +205,54 @@ template <typename N> class Dag {
             return --numEdges;
         }
        
-
-        
+        std::vector<std::unique_ptr<Edge<N>>>& getEdges(){
+            return edges;
+        }
+    
     private:
         std::vector<Node<N>*> nodes; //Set of all nodes.
         std::vector<std::unique_ptr<Edge<N>>> edges; //Set of all edges.
         int numNodes = 0;
         int numEdges = 0;
-
+        
         std::vector<std::vector<int>> table;
 
         int checkCycle() {
-            assert(0 && "Cycle Checking Function not yet implemented");
+            int dim = numNodes;
+            bool empty = false;
+            std::vector<int> removed;
+            
+            //Checks if an integer is in the vector removed
+            auto isValid = [=](int i) {return !std::count(removed.begin(), removed.end(), i);};
+
+            outer_loop: 
+            while (dim) { //While graph is not empty
+                
+                empty = false;
+
+                for (int i = 0; i < numNodes; i++) { //For all columns
+                    
+                    if (!isValid(i)) continue;
+                    //Sets empty = true if all valid nodes of the current column are 0.
+                    {   int j = 0;
+                        while(j < numNodes || !(empty = true))
+                            if (isValid(j) && table[i][j++]) break;  }
+                    
+                    if (!empty) continue;
+
+                    //The coloumn at i was empty.
+                    removed.push_back(i);
+                    dim --;
+                    goto outer_loop;
+                    
+                }
+
+                
+                /*If the for loop finished without jumping to the outerloop,
+                then the graph has cycles. */
+                throw std::invalid_argument("Cycles detected in Graph.");
+
+            }
             return 0;
         }
 

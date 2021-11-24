@@ -40,9 +40,6 @@ int main() {
     */
 
 
-
-
-
     Node<char>* A = new Node<char>('A'); 
     Node<char>* D = new Node<char>('D');
     Node<char>* G = new Node<char>('G');
@@ -54,64 +51,111 @@ int main() {
     Node<char>* I = new Node<char>('I');
     
 
-    unique_ptr<Edge<char>> edge1(new Edge<char>{A, B});
-    unique_ptr<Edge<char>> edge2(new Edge<char>{B, C});
-    unique_ptr<Edge<char>> edge3(new Edge<char>{C, A});
-    unique_ptr<Edge<char>> edge4(new Edge<char>{F, I});
-    unique_ptr<Edge<char>> edge5(new Edge<char>{I, B});
-    unique_ptr<Edge<char>> edge6(new Edge<char>{B, E});
-    unique_ptr<Edge<char>> edge7(new Edge<char>{E, G});
-    unique_ptr<Edge<char>> edge8(new Edge<char>{G, E});
-    unique_ptr<Edge<char>> edge9(new Edge<char>{E, H});
+    unique_ptr<Edge<char>> A_B(new Edge<char>{A, B});
+    unique_ptr<Edge<char>> B_C(new Edge<char>{B, C});
+    unique_ptr<Edge<char>> C_D(new Edge<char>{C, D});
+    unique_ptr<Edge<char>> B_E(new Edge<char>{B, E});
+    unique_ptr<Edge<char>> E_A(new Edge<char>{E, A});
+    unique_ptr<Edge<char>> edge6(new Edge<char>{F, G});
+    unique_ptr<Edge<char>> edge7(new Edge<char>{G, H});
+    unique_ptr<Edge<char>> edge8(new Edge<char>{H, I});
+    unique_ptr<Edge<char>> edge9(new Edge<char>{I, A});
+    
 
-    unique_ptr<Edge<char>> edges[9] = {move(edge1), move(edge2), move(edge3),
-                                       move(edge4), move(edge5), move(edge6),
-                                       move(edge7), move(edge8), move(edge9)};
-    // Dag dag = Dag(move(edge1));
+
+
+
+    unique_ptr<Edge<char>> edges[2] = {move(A_B), move(B_C)};
+
     Dag<char> dag = Dag<char>(edges, sizeof(edges)/sizeof(edges[0]));
+    /*  
+    Current Graph:
+    [A]-->[B]-->[C]
+    */
 
-    dag.addNode(D);
+    dag.addNode(C);
+    /*  
+    Current Graph: (C was already added before in B_C)
+    [A]-->[B]-->[C]
+    */
+
+   Node<char>* nodes[2] = {C,D};
+   dag.addNode(nodes, sizeof(nodes)/sizeof(nodes[0]));
+   
+    /*  
+    Current Graph: (C was already added before)
+    [A]-->[B]-->[C]
+          
+        [D]
+    */
+    
+    dag.addEdge(move(C_D));
+
+    /*  
+    Current Graph: (C and D was already added before)
+     [A]-->[B]-->[C]
+                  |        
+        [D]<-----⌟      
+    */
+
+
+    dag.printTable(); //Shows the adjacency matrix of the edges.
+
+    vector<Node<char>*> children = dag.getSuccessors(B);
+    cout << "Children of B are: " << children[0]->val << endl;
+
+    dag.addEdge(move(B_E));
+
+    /*  
+    Current Graph:
+     [A]-->[B]-->[C]-->[D]
+            |        
+      [E]<--⌟      
+    */
+
+    children = dag.getSuccessors(B);
+    cout << "Children of B are: " << children[0]->val << ", " << children[1]->val << endl << endl;
+
+
+    /*  
+    Current Graph:
+     [A]-->[B]   [D]
+            |        
+      [E]<--⌟      
+    */
+
+    dag.removeNode(C);
     dag.printTable();
-    dag.removeNode(D);
+    children = dag.getSuccessors(B);
+    cout << "Children of B are: " << children[0]->val << endl << endl;
+
+
+    /*  
+    Propsed Graph:
+      [A]-->[B]   [D]
+       ^     |
+       |     |        
+      [E]<--⌟      
+    */
+   dag.addEdge(move(E_A));
+    try {
+        dag.addEdge(move(E_A)); //Will generate an exception as it adds cycle
+    } catch(...) {
+        cout << "Exception Caught" << endl;
+        dag.removeEdge(E,A);
+    }
+
     dag.printTable();
-    dag.removeEdge(E,G);
-    dag.printTable();
+
+    //View all current edges
+    vector<unique_ptr<Edge<char>>>& edgesRef = dag.getEdges();
+
+    for (auto it = edgesRef.begin(); it != edgesRef.end(); it++)
+        cout << (*it)->from->val << " -> " << (*it)->to->val << endl;
+    
     
 
 
-    cout << endl;
-    // Edge<char, int>* edges[] = {new Edge<char,int>(A,B,1),
-    //                             new Edge<char,int>(B,C,2),
-    //                             new Edge<char,int>(C,A,1)};
-    
-    // int edgeNum = sizeof(edges)/sizeof(edges[0]);
-
-    
-    // Dag<char, int> dag = Dag(edges, edgeNum);
-    
-
-    // dag.addEdge(new Edge<char,int>(A,B,7)); //Will be added because it's unique.
-    // dag.addEdge(new Edge<char,int>(A,B,1)); //Won't be added as an edge with the same values already exists.
-    // dag.addEdge(edges[2]);                  //Won't be added because edge was already added before.
-
-
-    
-    // dag.printEdges();
-
-
-
-    // dag.printEdges();
-    // unordered_set<char,int> outA = A->getOut();
-
-    // for (auto i = outA.begin(); i != outA.end(); i++){
-    //     unordered_set<char,int> outA2 = (*i)->getTo()->getOut();
-
-    //     for (auto j = outA2.begin(); j != outA2.end(); j++) {
-
-    //     }
-
-    // }
-        // std::cout << "(" << (*it)->from->val << ") --" << (*it)->weight << "-> (" << (*it)->to->val << ")" << std::endl;
 
 
 }
