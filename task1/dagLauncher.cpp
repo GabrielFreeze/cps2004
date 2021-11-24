@@ -62,10 +62,8 @@ int main() {
     unique_ptr<Edge<char>> edge9(new Edge<char>{I, A});
     
 
-
-
-
     unique_ptr<Edge<char>> edges[2] = {move(A_B), move(B_C)};
+    //unique_ptr<Edge<char>> test = A_B; Unique pointer cannot be moved
 
     Dag<char> dag = Dag<char>(edges, sizeof(edges)/sizeof(edges[0]));
     /*  
@@ -124,7 +122,7 @@ int main() {
       [E]<--⌟      
     */
 
-    dag.removeNode(C);
+    dag.removeNode(C); //Will remove the edges B->C C->D
     dag.printTable();
     children = dag.getSuccessors(B);
     cout << "Children of B are: " << children[0]->val << endl << endl;

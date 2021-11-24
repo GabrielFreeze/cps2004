@@ -102,14 +102,13 @@ template <typename N> class Dag {
             //Return -1 in case of non-existent node
             if (!exists(node)) return -1;
 
-            // //Remove any edges that relied on the node being deleted
+            //Remove any edges that relied on the node being deleted
             for (auto it = edges.begin(); it != edges.end(); it++) {
                 if ((*it)->from == node || (*it)->to == node) {
                     removeEdge((*it)->from, (*it)->to);
                     it--;
                 }
             }
-
 
             //Find index of the node to be removed
             int j;
