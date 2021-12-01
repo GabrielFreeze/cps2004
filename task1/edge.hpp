@@ -4,6 +4,10 @@ template <typename N> class Dag;
 
 template <typename N> struct Edge {
     
-    Node<N> *from;
-    Node<N> *to;
+
+    std::shared_ptr<Node<N>> from;
+    std::shared_ptr<Node<N>> to;
+
+    // Node<N> *from;
+    // Node<N> *to;
 };

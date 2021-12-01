@@ -4,17 +4,8 @@
 using namespace std;
 
 /*
-    TODO: Implement checkCycles function.
-    TODO: Optimise the 2 sets for nodes and edges.
-    TODO: Figure out ownership
-    TODO: Deprecate edge class.
+    TODO: Make all node raw pointers to shared pointers.
 */
-
-//Shared pointer of a unique pointer to a node.
-//Convert unique_ptr into shared_ptr once unqie_ptr is passed to Graph.
-
-
-
 
 
 /*
@@ -39,46 +30,51 @@ int main() {
     ⌞_____₁______⌟
     */
 
-
-    Node<char>* A = new Node<char>('A'); 
-    Node<char>* D = new Node<char>('D');
-    Node<char>* G = new Node<char>('G');
-    Node<char>* B = new Node<char>('B'); 
-    Node<char>* E = new Node<char>('E');
-    Node<char>* H = new Node<char>('H');
-    Node<char>* C = new Node<char>('C'); 
-    Node<char>* F = new Node<char>('F');
-    Node<char>* I = new Node<char>('I');
+    auto A = make_shared<Node<char>>('A'); 
+    auto D = make_shared<Node<char>>('D');
+    auto G = make_shared<Node<char>>('G');
+    auto B = make_shared<Node<char>>('B'); 
+    auto E = make_shared<Node<char>>('E');
+    auto H = make_shared<Node<char>>('H');
+    auto C = make_shared<Node<char>>('C'); 
+    auto F = make_shared<Node<char>>('F');
+    auto I = make_shared<Node<char>>('I');
     
 
-    unique_ptr<Edge<char>> A_B(new Edge<char>{A, B});
-    unique_ptr<Edge<char>> B_C(new Edge<char>{B, C});
-    unique_ptr<Edge<char>> C_D(new Edge<char>{C, D});
-    unique_ptr<Edge<char>> B_E(new Edge<char>{B, E});
-    unique_ptr<Edge<char>> E_A(new Edge<char>{E, A});
-    unique_ptr<Edge<char>> edge6(new Edge<char>{F, G});
-    unique_ptr<Edge<char>> edge7(new Edge<char>{G, H});
-    unique_ptr<Edge<char>> edge8(new Edge<char>{H, I});
-    unique_ptr<Edge<char>> edge9(new Edge<char>{I, A});
+    auto A_B = make_unique<Edge<char>>(Edge<char>{A, B});
+    auto B_C = make_unique<Edge<char>>(Edge<char>{B, C});
+    auto C_D = make_unique<Edge<char>>(Edge<char>{C, D});
+    auto B_E = make_unique<Edge<char>>(Edge<char>{B, E});
+    auto E_A = make_unique<Edge<char>>(Edge<char>{E, A});
+    
+
     
 
     unique_ptr<Edge<char>> edges[2] = {move(A_B), move(B_C)};
     //unique_ptr<Edge<char>> test = A_B; Unique pointer cannot be moved
 
     Dag<char> dag = Dag<char>(edges, sizeof(edges)/sizeof(edges[0]));
+    dag.printTable();
+    cout << "Added: A->B, B->C" << endl << endl;
     /*  
     Current Graph:
     [A]-->[B]-->[C]
     */
 
     dag.addNode(C);
+    dag.printTable();
+    cout << "Added: C (was already in the graph)" << endl << endl;
+
     /*  
     Current Graph: (C was already added before in B_C)
     [A]-->[B]-->[C]
     */
 
-   Node<char>* nodes[2] = {C,D};
+   shared_ptr<Node<char>> nodes[2] = {C,D};
    dag.addNode(nodes, sizeof(nodes)/sizeof(nodes[0]));
+   dag.printTable();
+   cout << "Added: C, D (C was already in the graph)" << endl << endl;
+
    
     /*  
     Current Graph: (C was already added before)
@@ -88,6 +84,9 @@ int main() {
     */
     
     dag.addEdge(move(C_D));
+    dag.printTable();
+    cout << "Added: C->D" << endl << endl;
+
 
     /*  
     Current Graph: (C and D was already added before)
@@ -97,12 +96,12 @@ int main() {
     */
 
 
-    dag.printTable(); //Shows the adjacency matrix of the edges.
-
-    vector<Node<char>*> children = dag.getSuccessors(B);
+    vector<shared_ptr<Node<char>>> children = dag.getSuccessors(B);
     cout << "Children of B are: " << children[0]->val << endl;
-
     dag.addEdge(move(B_E));
+    dag.printTable();
+    cout << "Added: B->E" << endl << endl;
+
 
     /*  
     Current Graph:
@@ -112,8 +111,15 @@ int main() {
     */
 
     children = dag.getSuccessors(B);
-    cout << "Children of B are: " << children[0]->val << ", " << children[1]->val << endl << endl;
+    cout << "Children of B are: " << children[0]->val << ", " << children[1]->val << endl;
 
+
+    dag.removeNode(C); //Will remove the edges B->C C->D
+    dag.printTable();
+    cout << "Removed: C" << endl << endl;
+
+    children = dag.getSuccessors(B);
+    cout << "Children of B are: " << children[0]->val << endl;
 
     /*  
     Current Graph:
@@ -122,12 +128,14 @@ int main() {
       [E]<--⌟      
     */
 
-    dag.removeNode(C); //Will remove the edges B->C C->D
-    dag.printTable();
-    children = dag.getSuccessors(B);
-    cout << "Children of B are: " << children[0]->val << endl << endl;
 
-
+   dag.addEdge(move(E_A));
+    try {
+        dag.addEdge(move(E_A)); //Will generate an exception as it adds cycle
+    } catch(...) {
+        cout << "Exception Caught" << endl << endl;
+        dag.removeEdge(E,A);
+    }
     /*  
     Propsed Graph:
       [A]-->[B]   [D]
@@ -135,25 +143,13 @@ int main() {
        |     |        
       [E]<--⌟      
     */
-   dag.addEdge(move(E_A));
-    try {
-        dag.addEdge(move(E_A)); //Will generate an exception as it adds cycle
-    } catch(...) {
-        cout << "Exception Caught" << endl;
-        dag.removeEdge(E,A);
-    }
 
     dag.printTable();
+    cout << "Could not add E->A because of cycles" << endl << endl;
 
     //View all current edges
     vector<unique_ptr<Edge<char>>>& edgesRef = dag.getEdges();
-
+    cout << "Final edges: " << endl;
     for (auto it = edgesRef.begin(); it != edgesRef.end(); it++)
         cout << (*it)->from->val << " -> " << (*it)->to->val << endl;
-    
-    
-
-
-
-
 }

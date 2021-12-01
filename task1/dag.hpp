@@ -13,17 +13,15 @@ template <typename N> class Dag {
     public:
         Dag(std::unique_ptr<Edge<N>>* edges, int size) {
             //Add every edge to edges vector
-            for (auto i = 0; i < size; i++){
-                addEdge(std::move(edges[i]));
-            }
-            checkCycle();
+            addEdge(edges, size);
+            
         }
         Dag(std::unique_ptr<Edge<N>> edge) {
             addEdge(std::move(edge));
         }
         Dag(){};
 
-        bool exists(Node<N>* node){
+        bool exists(std::shared_ptr<Node<N>> node){
             return node->index > -1;
         }
 
@@ -45,12 +43,12 @@ template <typename N> class Dag {
             std::cout << std::endl;
         }
 
-        void addNode(Node<N>** nodes, int size) {
+        void addNode(std::shared_ptr<Node<N>>* nodes, int size) {
             for (int i = 0; i < size; i++){
                 addNode(nodes[i]);
             }
         }
-        int addNode(Node<N>* node) {
+        int addNode(std::shared_ptr<Node<N>> node) {
             if (!node) throw std::invalid_argument("Argument passed is a Null Pointer.");
            
             //If node is already in graph, return -1.
@@ -81,10 +79,10 @@ template <typename N> class Dag {
             return 0;
         }
 
-        std::vector<Node<N>*> getSuccessors(Node<N>* node){
+        std::vector<std::shared_ptr<Node<N>>> getSuccessors(std::shared_ptr<Node<N>> node){
             if (!exists(node)) throw std::invalid_argument("Node passed is a Null Pointer.");
 
-            std::vector<Node<N>*> children;
+            std::vector<std::shared_ptr<Node<N>>> children;
             int index;
 
             for (int i = 0; i < numNodes; i++) {
@@ -95,7 +93,7 @@ template <typename N> class Dag {
             return children;
         }
 
-        int removeNode(Node<N>* node) {
+        int removeNode(std::shared_ptr<Node<N>> node) {
             
             if (!node) throw std::invalid_argument("Argument passed is a Null Pointer.");
             
@@ -144,7 +142,7 @@ template <typename N> class Dag {
         
         int addEdge(std::unique_ptr<Edge<N>>* edges, int size) {
             for (auto i = 0; i < size; i++){
-                std::unique_ptr<Edge<N>> edge = std::move(edge[i]);
+                std::unique_ptr<Edge<N>> edge = std::move(edges[i]);
 
                 if (!edge) throw std::invalid_argument("Argument passed is a Null Pointer.");
 
@@ -156,12 +154,11 @@ template <typename N> class Dag {
                 table[edge->from->index][edge->to->index] = ++numEdges;
 
                 //Move edge to vector of edges.
-                edges.push_back(std::move(edge));
-                
-                return numEdges;
+                this->edges.push_back(std::move(edge));
             }
 
             checkCycle();
+            return numEdges;
         }
         int addEdge(std::unique_ptr<Edge<N>> edge){
             if (!edge) throw std::invalid_argument("Argument passed is a Null Pointer.");
@@ -181,7 +178,7 @@ template <typename N> class Dag {
 
         }
         
-        int removeEdge(Node<N>* from, Node<N>* to) {
+        int removeEdge(std::shared_ptr<Node<N>> from, std::shared_ptr<Node<N>> to) {
             if (!from || !to) throw std::invalid_argument("Argument passed is a Null Pointer.");
 
             //Get the index of the edge describing this connection
@@ -209,7 +206,7 @@ template <typename N> class Dag {
         }
     
     private:
-        std::vector<Node<N>*> nodes; //Set of all nodes.
+        std::vector<std::shared_ptr<Node<N>>> nodes; //Set of all nodes.
         std::vector<std::unique_ptr<Edge<N>>> edges; //Set of all edges.
         int numNodes = 0;
         int numEdges = 0;
@@ -232,6 +229,7 @@ template <typename N> class Dag {
                 for (int i = 0; i < numNodes; i++) { //For all columns
                     
                     if (!isValid(i)) continue;
+
                     //Sets empty = true if all valid nodes of the current column are 0.
                     {   int j = 0;
                         while(j < numNodes || !(empty = true))
@@ -256,5 +254,4 @@ template <typename N> class Dag {
         }
 
         
-
 };
