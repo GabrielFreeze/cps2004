@@ -11,9 +11,6 @@ public class Trader extends User{
     }
 
 
-    
-
-
 
 //     ____ _____ _____ _____ _____ ____  ____       _    _   _ ____     ____  _____ _____ _____ _____ ____  ____     
 //     / ___| ____|_   _|_   _| ____|  _ \/ ___|     / \  | \ | |  _ \  / ___|| ____|_   _|_   _| ____|  _ \/ ___|
@@ -25,7 +22,8 @@ public class Trader extends User{
     public Boolean getRegistered() {
         return registered;
     }
-    public void setRegistered(Boolean registered) {
+    public void setRegistered(Boolean registered) throws Exception{
+        if (!login) throw new Exception("Trader not logged in!");
         this.registered = registered;
     }
     
@@ -34,6 +32,10 @@ public class Trader extends User{
     }
     public void setApproved(Boolean approved, Admin admin) throws Exception {
 
+        if (!login)
+            throw new Exception("Admin passed to setApproved must reference Trader to approve in traderToApprove in Admin");
+        if (!registered)
+            throw new Exception("Trader is not registered");
         if (admin.getTraderToApprove() != this)
             throw new Exception("Admin passed to setApproved must reference Trader to approve in traderToApprove in Admin");
         
