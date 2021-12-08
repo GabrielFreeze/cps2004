@@ -1,15 +1,12 @@
 package pakSource;
 
-public abstract class Crypto {
-    String symbol;
-    int totalSupply;
-    int decimals;
-    double exchangeRate;
+public class Crypto extends Coin{
 
-    public Crypto(String symbol, int totalSupply, int decimals, double exchangeRate) {
-        this.symbol = symbol;
-        this.totalSupply = totalSupply;
-        this.decimals = decimals;
-        this.exchangeRate = exchangeRate;
+    public Crypto(String symbol, int decimals, double exchangeRate, double totalSupply) {
+        super(symbol, decimals, exchangeRate, totalSupply);
     }
+
+    
+
+
 }

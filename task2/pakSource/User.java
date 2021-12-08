@@ -5,8 +5,7 @@ public abstract class User {
     protected String password;
     protected Boolean login;
 
-    //List of cryptos that the user has.
-    //List of fiat that the user has.
+    
 
 
 
@@ -25,7 +24,9 @@ public abstract class User {
         login = false;
     }
 
-
+    protected void assertLogin() throws Exception{
+        if (!login) throw new Exception("User must be logged in to perform this action.");
+    }
 
     
 //     ____ _____ _____ _____ _____ ____  ____       _    _   _ ____     ____  _____ _____ _____ _____ ____  ____     

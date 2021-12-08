@@ -1,7 +1,9 @@
 package pakSource;
 
-public class Fiat {
-    String name; //Dollar, euro...
-    double exchangeRate; //A variable that is used while chaning currencies
+public class Fiat extends Coin{
+    
+    public Fiat(String symbol, int decimals, double exchangeRate, double totalSupply) {
+        super(symbol, decimals, exchangeRate, totalSupply);
+    }
     
 }
