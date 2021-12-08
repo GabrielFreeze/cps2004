@@ -6,6 +6,15 @@ class HelloWorld {
         An admin must also login, and choose to approve this trader.
         Then the trader must accept the approval by referencing the admin that approved him.*/
     
+
+
+        // _   _
+        // | | | |___  ___ _ __ ___
+        // | | | / __|/ _ \ '__/ __|
+        // | |_| \__ \  __/ |  \__ \
+        //  \___/|___/\___|_|  |___/
+
+
         //Create a trader and an admin account.
         Trader trader = new Trader("trader","123");
         Admin admin =  new Admin("admin", "123");
@@ -62,31 +71,39 @@ class HelloWorld {
         
 
 
-        //Trader and admin logout
-        trader.logout();
-        admin.logout();
+            
 
-        System.out.println("!");
 
+        //      ____      _
+        //     / ___|___ (_)_ __  ___
+        //    | |   / _ \| | '_ \/ __|
+        //    | |__| (_) | | | | \__ \
+        //     \____\___/|_|_| |_|___/
+
+
+        
         
         Fiat euro = new Fiat("€",2,1,1000);
+        Fiat dollar = new Fiat("$", 2, 1,1000);
         
-        //Reference to euro added to trader. Trader still hasn't bought any euro
         try {
-            trader.addFiat(euro); 
-        } catch (Exception e) {
-            //trader is not logged in.
-        }
+
+            //Trader adds fiat currencies to his account
+                trader.addFiat(euro);
+                trader.addFiat(dollar); 
+                trader.addFiat(10, euro.getId());
+                trader.addFiat(20, dollar.getId());
+                System.out.println(trader.getBalance(euro.getId()));    //10.00
+                System.out.println(trader.getBalance(dollar.getId()));  //20.00
             
-        
-        try {
-            trader.addFiat(10, euro.getId());
+            
+           
         } catch (Exception e) {
-            //Amount may be non-negative
-            //Euro may not have been added to trader's available crypto coins.
+            System.out.println(e.getMessage());
         }
-
-
-
+        
+        
+        trader.logout();
+        admin.logout();
     }
 }

@@ -86,6 +86,8 @@ public class Trader extends User{
         //crypto: The coin which the user will be buying
         //coinIndex: What currency will he use to buy crypto.
 
+        
+
     }
 
     public Boolean getRegistered() throws Exception {
