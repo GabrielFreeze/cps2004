@@ -3,4 +3,4 @@ build
 
 git-creds
 
-task2/pakSource/*.class
+*.class
