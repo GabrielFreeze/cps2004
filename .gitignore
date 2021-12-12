@@ -2,3 +2,5 @@ build
 .vscode
 
 git-creds
+
+task2/pakSource/*.class
