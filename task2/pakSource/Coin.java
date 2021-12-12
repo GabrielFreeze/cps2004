@@ -1,5 +1,4 @@
 package pakSource;
-import java.util.ArrayList;
 
 public abstract class Coin {
     protected String symbol;
@@ -13,6 +12,8 @@ public abstract class Coin {
         id = count++; //Increments the current number of coins, and sets an id to the instance of this coin.
         this.symbol = symbol;
         this.decimals = decimals;
+        this.exchangeRate = exchangeRate;
+        this.totalSupply = totalSupply;
     }
 
     public void setExchangeRate(double exchangeRate) {

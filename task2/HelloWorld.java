@@ -5,10 +5,11 @@ class HelloWorld {
         /*For a trader to be approved, he must login and register.
         An admin must also login, and choose to approve this trader.
         Then the trader must accept the approval by referencing the admin that approved him.*/
-    
+        
+        //TODO: Handle capping of up to "decimals" decimal points per crypto currency.
 
 
-        // _   _
+        //  _   _
         // | | | |___  ___ _ __ ___
         // | | | / __|/ _ \ '__/ __|
         // | |_| \__ \  __/ |  \__ \
@@ -17,6 +18,7 @@ class HelloWorld {
 
         //Create a trader and an admin account.
         Trader trader = new Trader("trader","123");
+        Trader joe = new Trader("joe", "joeyjoe");
         Admin admin =  new Admin("admin", "123");
         
 
@@ -32,6 +34,7 @@ class HelloWorld {
         //Trader logs in
             try {      
                 trader.login("trader","123");
+                joe.login("joe","joeyjoe");
             } catch (Exception e) {
                 //The trader did not log in correctly.
                 System.out.println("The trader did not log in correctly.");
@@ -42,6 +45,7 @@ class HelloWorld {
         // Trader registers for approval
             try {
                 trader.setRegistered(true);
+                joe.setRegistered(true);
             } catch (Exception e) {
                 //Thr trader is not logged in
                 System.out.println("The trader is not logged in");
@@ -50,28 +54,51 @@ class HelloWorld {
 
 
         //Admin wants to register trader
-            try {
-                admin.setTraderToApprove(trader);
-            } catch (Exception e) {
-                //Admin may not be logged in
-                //Trader may not have registered to be approved
-                System.out.println("Admin could not approve trader");
-                System.exit(0);
-            }
+        try {
+            admin.setTraderToApprove(trader);
+        } catch (Exception e) {
+            //Admin may not be logged in
+            //Trader may not have registered to be approved
+            System.out.println("Admin could not approve trader");
+            System.exit(0);
+        }
         
         //Trader can confirm approval request by referencing to the admin that approved him
-            try {
-                trader.setApproved(true, admin);
-            } catch (Exception e) {
-                //Reference to admin that does not want trader to be approved
-                //Trader may not be registered to be approved.
-                System.out.println("Trader could not accept approval request");
-                System.exit(0);
-            }
-        
-
-
+        try {
+            trader.setApproved(true, admin);
+        } catch (Exception e) {
+            //Reference to admin that does not want trader to be approved
+            //Trader may not be registered to be approved.
+            System.out.println("Trader could not accept approval request");
+            System.exit(0);
+        }
             
+        //Admin wants to register trader
+        try {
+            admin.setTraderToApprove(joe);
+        } catch (Exception e) {
+            //Admin may not be logged in
+            //Trader may not have registered to be approved
+            System.out.println("Admin could not approve trader");
+            System.exit(0);
+        }
+        
+        //Trader can confirm approval request by referencing to the admin that approved him
+        try {
+            joe.setApproved(true, admin);
+        } catch (Exception e) {
+            //Reference to admin that does not want trader to be approved
+            //Trader may not be registered to be approved.
+            System.out.println("Trader could not accept approval request");
+            System.exit(0);
+        }
+
+
+
+
+
+
+
 
 
         //      ____      _
@@ -82,22 +109,48 @@ class HelloWorld {
 
 
         
+
+
         
-        Fiat euro = new Fiat("€",2,1,1000);
-        Fiat dollar = new Fiat("$", 2, 1,1000);
+        
+        Fiat euro = new Fiat("€", 2, 1, 1000.0);            //A new Fiat coin was created
+        Fiat dollar = new Fiat("$", 2, 1, 1000.0);          //A new Fiat coin was created
+
+        Crypto btc = new Crypto("$BTC", 8, 1, 1000.0);
+        Crypto doge = new Crypto("$DOGE", 8, 1, 1000.0);
         
         try {
+            trader.addFiat(10, euro);                       //Trader adds €10 to his account.
+            trader.addFiat(20, dollar);                     //Trader adds $10 to his account.
+            
+            joe.addFiat(200, dollar);
+            joe.addCrypto(200, btc);
+            joe.addCrypto(100, doge);
 
-            //Trader adds fiat currencies to his account
-                trader.addFiat(euro);
-                trader.addFiat(dollar); 
-                trader.addFiat(10, euro.getId());
-                trader.addFiat(20, dollar.getId());
-                System.out.println(trader.getBalance(euro.getId()));    //10.00
-                System.out.println(trader.getBalance(dollar.getId()));  //20.00
+            System.out.println("Trader's euro balance: " + trader.getBalance(euro));      //10.00
+            System.out.println("Trader's dollar balance: " + trader.getBalance(dollar));  //20.00
+
+            System.out.println("Joe's BTC balance: " + joe.getBalance(btc));           //200.00000000
+            System.out.println("Joe's DOGE balance: " + joe.getBalance(doge));         //100.00000000
             
+
+            //The trader wishes to use his EUROS to buy some BTC.
+            //This order is added to the orderbook and remains UNFULFILLED.
+            trader.buy(2, btc, euro);
+            MatchingEngine.printQueue();
+
+            //The Matching Engine attempts to match any orders but does not find any
+            MatchingEngine.update();
+
+            //Joe wishes to sell 4 BTC for the equivalent in euros.
+            //This order is added to the orderbook and remains UNFULFILLED
+            trader.sell(4, btc, euro);
+            MatchingEngine.printQueue();
+
+            System.out.println(OrderType.BUY);
             
-           
+
+                       
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

@@ -10,8 +10,8 @@ public class Trader extends User{
     protected ArrayList<Crypto> cryptos = new ArrayList<Crypto>();        //The cryptos the trader has.
     protected ArrayList<Double> cryptosBalance = new ArrayList<Double>(); //The amounts the trader has relating to a crypto.
 
-    protected ArrayList<Fiat> fiats = new ArrayList<Fiat>();              //The fiat the trader has.
-    protected ArrayList<Double> fiatsBalance = new ArrayList<Double>();   //The amounts the trader has relating to a fiat.
+    public ArrayList<Fiat> fiats = new ArrayList<Fiat>();              //The fiat the trader has.
+    public ArrayList<Double> fiatsBalance = new ArrayList<Double>();   //The amounts the trader has relating to a fiat.
 
 
     public Trader(String username, String password) {
@@ -20,21 +20,7 @@ public class Trader extends User{
     }
 
 
-    //Returns 1 if fiat already exists, 0 otherwise.
-    public int addFiat(Fiat fiat) throws Exception { 
-        
-        assertLogin();
-
-        for (Fiat fiat2: fiats) {
-            if (fiat2 == fiat) return 1;  
-        }
-        
-        fiats.add(fiat);
-        //Initially the user has no balance with respect to the new fiat currency just added.
-        fiatsBalance.add((double) 0); 
-        return 0;
-    }
-    public void addFiat(double amount, int fiatId) throws Exception {
+    public void addFiat(double amount, Fiat fiatToAdd) throws Exception {
         //In a real world application, a bank's API will handle the transferring of cash.
         //However, just as a proof of concept, fiat currencies can simply be added regardless.
         //Checks with the bank can be made in this function.
@@ -43,51 +29,133 @@ public class Trader extends User{
         if (amount <= 0)
             throw new Exception("Amount given must be non-negative");
         
-        //Throw exception if fiat currency relating to fiatId is not in user's fiat currencies.
-        int index = -1;
+        int fiatIndex = -1;
+
         for (int i = 0; i < fiats.size(); i++) {
-            if (fiats.get(i).id == fiatId) {
-                index = i;
+            if (fiats.get(i) == fiatToAdd) {
+                fiatIndex = i;
                 break;
             }
         }
-        if (index < 0)
-            throw new Exception("Fiat Id relating to a fiat currency is not present in user's fiat currencies");
-        
-        //Increase the balance of the fiat.
-        fiatsBalance.set(index, fiatsBalance.get(index)+amount);
 
-    
+        if (fiatIndex < 0) { //Create new fiat and set its balance to amount.
+            fiats.add(fiatToAdd);
+            fiatsBalance.add((double) amount);
+        } else { //Increment balance by amount.
+            fiatsBalance.set(fiatIndex,fiatsBalance.get(fiatIndex) + (double) amount); 
+        }
 
     }
 
-    public double getBalance(int coinId) throws Exception{
-        
+    public void addCrypto(double amount, Crypto cryptoToAdd) throws Exception {
+        //Assume that when a trader addsCrypto he is merely transfering the crypto coins from another wallet into the current one.
+        //A real world application can handle the transfer in this function. 
         assertLogin();
 
-        //Check for the id in fiats
-        for (int i = 0; i < fiats.size(); i++) {
-            if (fiats.get(i).getId() == coinId) return fiatsBalance.get(i);
-        }
+        if (amount <= 0)
+            throw new Exception("Amount given must be non-negative");
         
-        //Check for the id in cryptos
+        int cryptoIndex = -1;
+
         for (int i = 0; i < cryptos.size(); i++) {
-            if (cryptos.get(i).getId() == coinId) return cryptosBalance.get(i);
+            if (cryptos.get(i) == cryptoToAdd) {
+                cryptoIndex = i;
+                break;
+            }
         }
 
-        //If the id is not found in either than the user did not add that coin.
+        if (cryptoIndex < 0) { //Create new fiat and set its balance to amount.
+            cryptos.add(cryptoToAdd);
+            cryptosBalance.add((double) amount);
+        } else { //Increment balance by amount.
+            cryptosBalance.set(cryptoIndex,cryptosBalance.get(cryptoIndex) + (double) amount); 
+        }
+
+    }
+    public int existsFiat(Coin coin) {
+        //Check for the coin in fiats
+        for (int i = 0; i < fiats.size(); i++) {
+            if (fiats.get(i) == coin) return i;
+        }
+
+        return -1;
+    }
+    public int existsCrypto(Coin coin) {
+
+        //Check for the coin in cryptos
+        for (int i = 0; i < cryptos.size(); i++) {
+            if (cryptos.get(i) == coin) return i;
+        }
+
         return -1;
 
     }
+    
+    public double getBalance(Coin coin) throws Exception{
+        
+        assertLogin();
 
-    public void buy(double amount, Crypto crpto, int coinIndex) throws Exception {
+        int indexFiat = existsFiat(coin);
+        int indexCrypto = existsCrypto(coin);
+
+        if (indexFiat >= 0)        return fiatsBalance.get(indexFiat);
+        else if (indexCrypto >= 0) return cryptosBalance.get(indexCrypto);
+        else                       throw new Exception("Coin " + coin.symbol +" does not exist in Trader's account.");
+
+
+    }
+
+
+
+    public void sell(double amount, Crypto crypto, Fiat fiat) throws Exception {
+        assertLogin();
+        //amount: How much will the user sell of crypto
+        //crypto: The coin which the user will be selling
+        //fiat: What fiat currency will he get.
+
+        if (existsFiat(fiat) < 0) throw new Exception("Trader is attempting to buy with a fiat currency he does not own.");
+
+        MarketOrder order = new MarketOrder(this, OrderType.SELL, amount, crypto, fiat);
+        OrderBook.pushOrder(order);
+        MatchingEngine.add(order);
+    }
+
+
+    //MarketOrder Buy.
+    public void buy(double amount, Crypto crypto, Fiat fiat) throws Exception {
+        //amount: How much will the user buy of crypto
+        //crypto: The coin which the user will be buying
+        //fiat: What fiat currency will he use to buy crypto.
+
+        assertLogin();
+
+        //Check that fiat is valid
+        if (existsFiat(fiat) < 0) throw new Exception("Trader is attempting to buy with a fiat currency he does not own.");
+        
+        MarketOrder order = new MarketOrder(this, OrderType.BUY, amount, crypto, fiat);
+        OrderBook.pushOrder(order);
+        MatchingEngine.add(order);
+
+    }
+    
+    //LimitOrder Buy.
+    public void buy(double amount, Crypto crypto, Fiat fiat, double limit) throws Exception{
         assertLogin();
         //amount: How much will the user buy of crypto
         //crypto: The coin which the user will be buying
         //coinIndex: What currency will he use to buy crypto.
+        //limit: What should be the price of crypto before the order is available for execution.
 
+        if (existsFiat(fiat) < 0) throw new Exception("Trader is attempting to buy with a fiat currency he does not own.");
         
+        LimitOrder order = new LimitOrder(this, OrderType.BUY, amount, crypto, fiat, limit);
+        OrderBook.pushOrder(order);
+        MatchingEngine.add(order);
 
+    }
+
+    public ArrayList<Order> getOrderBookCopy() {
+        return OrderBook.copyOrderBook();
     }
 
     public Boolean getRegistered() throws Exception {
