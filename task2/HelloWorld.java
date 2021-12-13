@@ -110,17 +110,16 @@ class HelloWorld {
 
         
 
-
         
         
         Fiat euro = new Fiat("€", 2, 1, 1000.0);            //A new Fiat coin was created
-        Fiat dollar = new Fiat("$", 2, 1, 1000.0);          //A new Fiat coin was created
+        Fiat dollar = new Fiat("$", 2, 1.12, 1000.0);          //A new Fiat coin was created
 
-        Crypto btc = new Crypto("$BTC", 8, 1, 1000.0);
-        Crypto doge = new Crypto("$DOGE", 8, 1, 1000.0);
+        Crypto btc = new Crypto("$BTC", 8, 256, 1000.0);
+        Crypto doge = new Crypto("$DOGE", 8, 845, 1000.0);
         
         try {
-            trader.addFiat(10, euro);                       //Trader adds €10 to his account.
+            trader.addFiat(10000, euro);                       //Trader adds €10 to his account.
             trader.addFiat(20, dollar);                     //Trader adds $10 to his account.
             
             joe.addFiat(200, dollar);
@@ -144,11 +143,25 @@ class HelloWorld {
 
             //Joe wishes to sell 4 BTC for the equivalent in euros.
             //This order is added to the orderbook and remains UNFULFILLED
-            trader.sell(4, btc, euro);
+            joe.sell(4, btc, euro);
             MatchingEngine.printQueue();
 
-            System.out.println(OrderType.BUY);
+            /* The Matching Engine reliases it could match trader's buy order with joe's sell order.
+            Since trader only wants 2 btc, his order will be fullfilled. However joe's order still needs to sell
+            the remaioning 2 btc. */
+            MatchingEngine.update();
+            MatchingEngine.printQueue();
             
+            //Trader's wallet.
+            System.out.println("Trader's BTC wallet:\t" + trader.getBalance(btc));
+            System.out.println("Trader's euro wallet:\t" + trader.getBalance(euro));
+
+            //Joe's wallet.
+            System.out.println("Joe's BTC wallet:\t" + joe.getBalance(btc));
+            System.out.println("Joe's euro wallet:\t" + joe.getBalance(euro));
+
+            OrderBook.printOrderBook();
+
 
                        
         } catch (Exception e) {

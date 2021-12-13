@@ -1,12 +1,12 @@
 package pakSource;
 
 public abstract class Coin {
-    protected String symbol;
-    protected int decimals;
-    protected double exchangeRate;
-    protected double totalSupply;
-    protected static int count = 0;
-    protected int id;
+    private String symbol;
+    private int decimals;
+    private double exchangeRate;
+    private double totalSupply;
+    private static int count = 0;
+    private int id;
 
     protected Coin(String symbol, int decimals, double exchangeRate, double totalSupply) {
         id = count++; //Increments the current number of coins, and sets an id to the instance of this coin.
@@ -30,6 +30,9 @@ public abstract class Coin {
         return totalSupply;
     }
 
+    public String getSymbol(){
+        return symbol;
+    }
     public int getId() {
         return id;
     }

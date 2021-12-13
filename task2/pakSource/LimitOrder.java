@@ -10,6 +10,9 @@ class LimitOrder extends Order{
         this.bidask = bidask;
     }
     
+    protected double getBidask(){
+        return bidask;
+    }
     
     
 

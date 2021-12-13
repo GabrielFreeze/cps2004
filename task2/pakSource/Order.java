@@ -10,15 +10,16 @@ class Order {
     private Fiat to;              //The coin the trader will get paid in / The coin the trader will use to buy.
 
     private ArrayList<Trader> matchedTraders = new ArrayList<Trader>(); //The Trader that completed the order.
-    
-    private OrderType type;     //Buy or Ask
-    private OrderStatus orderStatus = OrderStatus.UNFILLED;
+    private static int count = 0;
+    private int id;
+    private OrderType type;     
+    private OrderStatus status = OrderStatus.UNFILLED;
 
     protected Order(Trader trader, OrderType type, double quantity, Crypto from, Fiat to){
         this.quantity = quantity;
         this.trader = trader;
         this.type = type;
-
+        this.id = count++;
         this.from = from;
         this.to = to;
     }
@@ -51,6 +52,17 @@ class Order {
         return type;
     }
     protected OrderStatus getStatus() {
-        return orderStatus;
+        return status;
+    }
+    protected int getId() {
+        return id;
+    }
+
+    protected void setStatus(OrderStatus status) {
+        this.status = status;
+
+        if (status == OrderStatus.CANCELLED) {
+            MatchingEngine.remove(this);
+        }
     }
 }

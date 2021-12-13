@@ -16,14 +16,31 @@ public class OrderBook {
             if (orderBook.get(i) == order) return i;
         }
 
-        throw new Exception("Order does not exist in order book");
+        throw new Exception("Order " + order + " does not exist in order book.");
     }
 
-    protected static ArrayList<Order> copyOrderBook(){
+    protected static ArrayList<Order> copyOrderBook() {
         
         ArrayList<Order> copy = new ArrayList<Order>();
         Collections.copy(copy,orderBook);
 
         return copy;
+    }
+
+    public static void printOrderBook() {
+
+        System.out.println("\n\nID\tTRADER\tTYPE\tPAIR\tQUANTITY\tSTATUS");
+        System.out.println("------------------------------------------------------");
+        
+        for (int i = orderBook.size()-1 ; i >= 0; i--) {
+            Order o = orderBook.get(i);
+            System.out.println(
+                o.getId()+"\t"+
+                o.getTrader().getUsername()+"\t"+
+                o.getType()+"\t"+
+                o.getFrom().getSymbol()+"/"+o.getTo().getSymbol()+"\t"+
+                o.getQuantity()+"\t\t"+
+                o.getStatus());
+        }
     }
 }

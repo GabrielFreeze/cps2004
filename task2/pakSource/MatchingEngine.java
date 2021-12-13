@@ -16,10 +16,23 @@ public class MatchingEngine {
     protected static void add(Order order) {
         queue.add(order);
     }
+    protected static void remove(Order order) {
+        queue.remove(order);
+    }
 
     public static void printQueue() {
         System.out.println("Matching Engine Order Queue: " + queue);
     }
+
+    public static Boolean limitOrderReady(LimitOrder order) {
+       
+        if (order.getType() == OrderType.BUY) //Returns true if the price of FROM is less than the bid price. 
+            return order.getFrom().getExchangeRate() <= order.getBidask();
+
+        else                                  //Returns true if the price of FROM is more than the ask price. 
+            return order.getFrom().getExchangeRate() >= order.getBidask();
+    }
+
 
     public static int update() {
         //For every order, traverse down the queue and find any matching order
@@ -27,45 +40,84 @@ public class MatchingEngine {
         for (Order o : queue) {
 
             for (Order p : queue) {
+                
                 //Preliminary plumbing
+                if (o instanceof LimitOrder && !limitOrderReady((LimitOrder) o) ||
+                    p instanceof LimitOrder && !limitOrderReady((LimitOrder) p)) continue;
+
                 if (o == p                          ||
                     p.getType() == o.getType()      ||
                     p.getTrader() == o.getTrader()  ||
                     p.getFrom() != o.getFrom()      ||
                     p.getTo() != o.getTo())         continue;
 
+                    
                 //If p did not go into the if statement, then it is a valid match for o.
-                
-                //o is Buying
-                //p is Selling
 
-                //p can be fulfilled, o can be partially filled
-                if (o.getQuantity() > p.getQuantity()) {
-                    //Mention which traders fulfilled orders o and p.
-                    o.addMatchedTrader(p.getTrader());
-                    p.addMatchedTrader(o.getTrader());
-                    
-
-                    //Subtract the crypto that just got sold from Order p's trader.
-                    try { p.getTrader().addCrypto(-p.getQuantity(), p.getFrom());
-                    } catch (Exception e) {Error.handleError(e);}
-
-                    //TODO: COMPLETE THIS
-                    //Need to calculate the price in fiat for the crypto that got bought
-                    //With exchange values or some bullshit yknow
-                    //Then add the calculated amount of fiat into order p's trader
-                    //Subtract the calculated amount of fiat from order o's trader
-                    //Add p.getQuantity() amount of crpyto into order o's wallet
-                    //Set p to be fulfilled and o to eb partially filled
-                    //Remove p from the queue
-
-                    
+                if (o.getType() == OrderType.BUY && p.getType() == OrderType.SELL) {
+                    matchOrders(o, p);
                 }
-                
-
+                else {
+                    matchOrders(p, o);
+                }
+                    
             }
         }
         
         return 0;
     }
+
+
+    private static void matchOrders(Order buy, Order sell) {
+        
+        //Mention which traders fulfilled orders buy and sell.
+        buy.addMatchedTrader(sell.getTrader());
+        sell.addMatchedTrader(buy.getTrader());
+        
+        
+
+        //Calculate how much FIAT does the CRYPTO cost.
+        //First exchanges it into price in euros, then exchanges it into price in FROM.
+        double amountInFiat = sell.getQuantity() * sell.getFrom().getExchangeRate() * sell.getTo().getExchangeRate();
+
+        try {
+            //Subtract the crypto that just got sold from Order sell's trader.
+            sell.getTrader().addCrypto(-sell.getQuantity(), sell.getFrom());
+            
+            //Add the crypto to Order buy's Trader
+             buy.getTrader().addCrypto(sell.getQuantity(), sell.getFrom());
+    
+            //Add the fiat to Order sell's Trader
+            sell.getTrader().addFiat(amountInFiat, sell.getTo());
+    
+            //Remove the fiat from Order buy's Trader
+            buy.getTrader().addFiat(-amountInFiat, buy.getTo());
+            
+        } catch (Exception e) {Error.handleError(e);}
+
+
+        //Update order status and remove filled orders from queue.
+        if (sell.getQuantity() < buy.getQuantity()) {
+            sell.setStatus(OrderStatus.FILLED);
+            buy.setStatus(OrderStatus.PARTIALLY_FILLED);
+
+            queue.remove(sell);
+        }
+        else if (sell.getQuantity() > buy.getQuantity()){
+            sell.setStatus(OrderStatus.PARTIALLY_FILLED);
+            buy.setStatus(OrderStatus.FILLED);
+
+            queue.remove(buy);
+        } else {
+            sell.setStatus(OrderStatus.FILLED);
+            buy.setStatus(OrderStatus.FILLED);
+
+            queue.remove(buy);
+            queue.remove(sell);
+        }
+
+        
+    }
+
+
 }
