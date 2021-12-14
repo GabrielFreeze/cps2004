@@ -7,6 +7,7 @@ class HelloWorld {
         Then the trader must accept the approval by referencing the admin that approved him.*/
         
         //TODO: Handle capping of up to "decimals" decimal points per crypto currency.
+        //TODO: Create an error system
 
 
         //  _   _
@@ -162,6 +163,29 @@ class HelloWorld {
 
             OrderBook.printOrderBook();
 
+            //Trader will place a buy limit order for when the price of BTC (exchange rate) is 100 or less.
+            trader.buy(2, btc, euro, 100);
+
+            /*The new order is not matched with joe's partially filled order as the 
+            price of BTC has met the limit order's condition.*/
+            MatchingEngine.update();
+            OrderBook.printOrderBook();
+
+            /*In a real world application this function would be applied on the actual value of BTC,
+            however in this example let's assume that the price has magically fallen.*/
+            btc.setExchangeRate(95);
+            
+            /*Since the limit order can now be executed, it will be matched with joe's previous order*/
+            MatchingEngine.update();
+            OrderBook.printOrderBook();
+            
+            //Trader's wallet.
+            System.out.println("Trader's BTC wallet:\t" + trader.getBalance(btc));
+            System.out.println("Trader's euro wallet:\t" + trader.getBalance(euro));
+
+            //Joe's wallet.
+            System.out.println("Joe's BTC wallet:\t" + joe.getBalance(btc));
+            System.out.println("Joe's euro wallet:\t" + joe.getBalance(euro));
 
                        
         } catch (Exception e) {
