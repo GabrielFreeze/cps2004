@@ -5,6 +5,7 @@ import java.util.Collections;
 class Order {
 
     private double quantity;      //The amount the trader is buying/selling.
+    private double quantityRemaining;
     private Trader trader;        //Trader who created the order.
     private Crypto from;            //The coin the trader is selling / The coin the trader is buying.
     private Fiat to;              //The coin the trader will get paid in / The coin the trader will use to buy.
@@ -17,6 +18,7 @@ class Order {
 
     protected Order(Trader trader, OrderType type, double quantity, Crypto from, Fiat to){
         this.quantity = quantity;
+        this.quantityRemaining = quantity;
         this.trader = trader;
         this.type = type;
         this.id = count++;
@@ -26,6 +28,9 @@ class Order {
 
     protected double getQuantity() {
         return quantity;
+    }
+    protected double getQuantityRemaining() {
+        return quantityRemaining;
     }
     protected Trader getTrader() {
         return trader;
@@ -40,7 +45,6 @@ class Order {
     protected void addMatchedTrader(Trader trader) {
         matchedTraders.add(trader);
     }
-
 
     protected Crypto getFrom() {
         return from;
@@ -64,5 +68,8 @@ class Order {
         if (status == OrderStatus.CANCELLED) {
             MatchingEngine.remove(this);
         }
+    }
+    protected void setQuantityRemaining(double quantityRemaining) {
+        this.quantityRemaining = quantityRemaining;
     }
 }

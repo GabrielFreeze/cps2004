@@ -42,5 +42,6 @@ public class OrderBook {
                 o.getQuantity()+"\t\t"+
                 o.getStatus());
         }
+        System.out.println();
     }
 }

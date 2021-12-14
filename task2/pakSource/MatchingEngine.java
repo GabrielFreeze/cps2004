@@ -74,18 +74,17 @@ public class MatchingEngine {
         buy.addMatchedTrader(sell.getTrader());
         sell.addMatchedTrader(buy.getTrader());
         
-        
 
         //Calculate how much FIAT does the CRYPTO cost.
         //First exchanges it into price in euros, then exchanges it into price in FROM.
-        double amountInFiat = sell.getQuantity() * sell.getFrom().getExchangeRate() * sell.getTo().getExchangeRate();
+        double amountInFiat = sell.getQuantityRemaining() * sell.getFrom().getExchangeRate() * sell.getTo().getExchangeRate();
 
         try {
             //Subtract the crypto that just got sold from Order sell's trader.
-            sell.getTrader().addCrypto(-sell.getQuantity(), sell.getFrom());
+            sell.getTrader().addCrypto(-sell.getQuantityRemaining(), sell.getFrom());
             
             //Add the crypto to Order buy's Trader
-             buy.getTrader().addCrypto(sell.getQuantity(), sell.getFrom());
+            buy.getTrader().addCrypto(sell.getQuantityRemaining(), sell.getFrom());
     
             //Add the fiat to Order sell's Trader
             sell.getTrader().addFiat(amountInFiat, sell.getTo());
@@ -93,28 +92,28 @@ public class MatchingEngine {
             //Remove the fiat from Order buy's Trader
             buy.getTrader().addFiat(-amountInFiat, buy.getTo());
             
+            //Update the order's remaining quantity
+            double buyQuantity = buy.getQuantityRemaining();
+            double sellQuantity = sell.getQuantityRemaining();
+
+            buy.setQuantityRemaining(buyQuantity-sellQuantity);
+            sell.setQuantityRemaining(sellQuantity-buyQuantity);
+
         } catch (Exception e) {Error.handleError(e);}
 
+        //Update orders' status
 
-        //Update order status and remove filled orders from queue.
-        if (sell.getQuantity() < buy.getQuantity()) {
+        if (sell.getQuantityRemaining() <= 0) {
             sell.setStatus(OrderStatus.FILLED);
-            buy.setStatus(OrderStatus.PARTIALLY_FILLED);
-
             queue.remove(sell);
-        }
-        else if (sell.getQuantity() > buy.getQuantity()){
-            sell.setStatus(OrderStatus.PARTIALLY_FILLED);
-            buy.setStatus(OrderStatus.FILLED);
+        } else sell.setStatus(OrderStatus.PARTIALLY_FILLED);
 
-            queue.remove(buy);
-        } else {
-            sell.setStatus(OrderStatus.FILLED);
+        if (buy.getQuantityRemaining() <= 0) {
             buy.setStatus(OrderStatus.FILLED);
-
             queue.remove(buy);
-            queue.remove(sell);
-        }
+        } else buy.setStatus(OrderStatus.PARTIALLY_FILLED);
+
+        
 
         
     }
