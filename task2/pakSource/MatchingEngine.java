@@ -81,12 +81,18 @@ public class MatchingEngine {
         
         try {
             
-            //Subtract the crypto that just got sold from Order sell's trader.
-            sell.getTrader().addCrypto(-buy.getQuantityRemaining(), sell.getFrom());
+            /*Subtract the crypto that just got sold from Order sell's trader and
+            add the crypto to Order buy's Trader*/
 
-            //Add the crypto to Order buy's Trader
-            buy.getTrader().addCrypto(buy.getQuantityRemaining(), sell.getFrom());
-
+            if (sell.getQuantityRemaining() > buy.getQuantityRemaining()){
+                sell.getTrader().addCrypto(-buy.getQuantityRemaining(), sell.getFrom());
+                buy.getTrader().addCrypto(buy.getQuantityRemaining(), sell.getFrom());
+            }
+            else {
+                sell.getTrader().addCrypto(-sell.getQuantityRemaining(), sell.getFrom());
+                buy.getTrader().addCrypto(sell.getQuantityRemaining(), sell.getFrom());
+            }
+            
             //Add the fiat to Order sell's Trader
             sell.getTrader().addFiat(amountInFiat, sell.getTo());
 
@@ -99,6 +105,8 @@ public class MatchingEngine {
             
             buy.setQuantityRemaining(buyQuantity-sellQuantity);
             sell.setQuantityRemaining(sellQuantity-buyQuantity);
+            System.out.println("Buyer Remaining Quantity: " + buy.getQuantityRemaining());
+            System.out.println("Seller Remaining Quantity: " + sell.getQuantityRemaining());
 
         } catch (Exception e) {Error.handleError(e);}
 
