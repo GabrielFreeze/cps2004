@@ -13,7 +13,7 @@ public abstract class Coin {
         this.symbol = symbol;
         this.decimals = decimals;
         this.exchangeRate = exchangeRate;
-        this.totalSupply = totalSupply;
+        this.totalSupply = (double) Math.round(totalSupply*Math.pow(10,decimals))/Math.pow(10,decimals);
     }
 
     public void setExchangeRate(double exchangeRate) {
@@ -35,6 +35,9 @@ public abstract class Coin {
     }
     public int getId() {
         return id;
+    }
+    public int getDecimals() {
+        return decimals;
     }
 
 

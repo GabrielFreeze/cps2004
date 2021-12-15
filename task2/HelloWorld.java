@@ -6,7 +6,6 @@ class HelloWorld {
         An admin must also login, and choose to approve this trader.
         Then the trader must accept the approval by referencing the admin that approved him.*/
         
-        //TODO: Handle capping of up to "decimals" decimal points per crypto currency.
         //TODO: Create an error system
 
 
@@ -116,7 +115,7 @@ class HelloWorld {
         Fiat euro = new Fiat("€", 2, 1, 1000.0);            //A new Fiat coin was created
         Fiat dollar = new Fiat("$", 2, 1.12, 1000.0);          //A new Fiat coin was created
 
-        Crypto btc = new Crypto("$BTC", 8, 256, 1000.0);
+        Crypto btc = new Crypto("$BTC", 8, 100, 1000.0);
         Crypto doge = new Crypto("$DOGE", 8, 845, 1000.0);
         
         try {
@@ -160,20 +159,20 @@ class HelloWorld {
             //Joe's wallet.
             System.out.println("Joe's BTC wallet:\t" + joe.getBalance(btc));
             System.out.println("Joe's euro wallet:\t" + joe.getBalance(euro));
-
+            
             OrderBook.printOrderBook();
 
-            //Trader will place a buy limit order for when the price of BTC (exchange rate) is 100 or less.
-            trader.buy(2, btc, euro, 100);
+            //Trader will place a buy limit order for when the price of BTC (exchange rate) is 50 or less.
+            trader.buy(2, btc, euro, 50);
 
             /*The new order is not matched with joe's partially filled order as the 
-            price of BTC has met the limit order's condition.*/
+            price of BTC has not met the limit order's condition.*/
             MatchingEngine.update();
             OrderBook.printOrderBook();
 
             /*In a real world application this function would be applied on the actual value of BTC,
             however in this example let's assume that the price has magically fallen.*/
-            btc.setExchangeRate(95);
+            btc.setExchangeRate(50);
             
             /*Since the limit order can now be executed, it will be matched with joe's previous order*/
             MatchingEngine.update();

@@ -10,6 +10,7 @@ class Order {
     private Crypto from;            //The coin the trader is selling / The coin the trader is buying.
     private Fiat to;              //The coin the trader will get paid in / The coin the trader will use to buy.
 
+    private double volumeExecuted;
     private ArrayList<Trader> matchedTraders = new ArrayList<Trader>(); //The Trader that completed the order.
     private static int count = 0;
     private int id;
@@ -24,6 +25,7 @@ class Order {
         this.id = count++;
         this.from = from;
         this.to = to;
+        this.volumeExecuted = 0;
     }
 
     protected double getQuantity() {
@@ -61,6 +63,10 @@ class Order {
     protected int getId() {
         return id;
     }
+    protected double getVolumeExecuted() {
+        return volumeExecuted;
+    }
+
 
     protected void setStatus(OrderStatus status) {
         this.status = status;
@@ -70,6 +76,9 @@ class Order {
         }
     }
     protected void setQuantityRemaining(double quantityRemaining) {
-        this.quantityRemaining = quantityRemaining;
+        this.quantityRemaining = Math.max(0, Math.min(quantity, quantityRemaining));
+        volumeExecuted = (double) Math.round((1 - this.quantityRemaining/quantity)*10000.0)/100.0;
+
     }
+
 }

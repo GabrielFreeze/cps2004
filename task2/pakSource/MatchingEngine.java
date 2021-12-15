@@ -77,25 +77,26 @@ public class MatchingEngine {
 
         //Calculate how much FIAT does the CRYPTO cost.
         //First exchanges it into price in euros, then exchanges it into price in FROM.
-        double amountInFiat = sell.getQuantityRemaining() * sell.getFrom().getExchangeRate() * sell.getTo().getExchangeRate();
-
+        double amountInFiat = buy.getQuantityRemaining() * sell.getFrom().getExchangeRate() * sell.getTo().getExchangeRate();
+        
         try {
-            //Subtract the crypto that just got sold from Order sell's trader.
-            sell.getTrader().addCrypto(-sell.getQuantityRemaining(), sell.getFrom());
             
+            //Subtract the crypto that just got sold from Order sell's trader.
+            sell.getTrader().addCrypto(-buy.getQuantityRemaining(), sell.getFrom());
+
             //Add the crypto to Order buy's Trader
-            buy.getTrader().addCrypto(sell.getQuantityRemaining(), sell.getFrom());
-    
+            buy.getTrader().addCrypto(buy.getQuantityRemaining(), sell.getFrom());
+
             //Add the fiat to Order sell's Trader
             sell.getTrader().addFiat(amountInFiat, sell.getTo());
-    
+
             //Remove the fiat from Order buy's Trader
             buy.getTrader().addFiat(-amountInFiat, buy.getTo());
             
             //Update the order's remaining quantity
             double buyQuantity = buy.getQuantityRemaining();
             double sellQuantity = sell.getQuantityRemaining();
-
+            
             buy.setQuantityRemaining(buyQuantity-sellQuantity);
             sell.setQuantityRemaining(sellQuantity-buyQuantity);
 

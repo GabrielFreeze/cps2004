@@ -19,7 +19,10 @@ public class Trader extends User{
         registered = false;
     }
 
-
+    private static double round(double x, double d) {
+        double y = Math.pow(10,d);
+        return (double) Math.round(x*y)/y;
+    }
     public void addFiat(double amount, Fiat fiatToAdd) throws Exception {
         //In a real world application, a bank's API will handle the transferring of cash.
         //However, just as a proof of concept, fiat currencies can simply be added regardless.
@@ -38,10 +41,11 @@ public class Trader extends User{
         if (fiatIndex < 0) { //Create new fiat and set its balance to amount.      
             if (amount <= 0) throw new Exception("Cannot add a negative amount of " + fiatToAdd.getSymbol() + " to Trader " + this.username);
             fiats.add(fiatToAdd);
-            fiatsBalance.add((double) amount);
+            fiatsBalance.add(round(amount, fiatToAdd.getDecimals()));
+            
         } else { //Increment balance by amount.
             if (amount < 0 && -amount > fiatsBalance.get(fiatIndex)) throw new Exception("Trader " + this.username + " does not have " + fiatToAdd.getSymbol() + -amount + " in their wallet.");
-            fiatsBalance.set(fiatIndex,fiatsBalance.get(fiatIndex) + (double) amount); 
+            fiatsBalance.set(fiatIndex,fiatsBalance.get(fiatIndex) + round(amount, fiatToAdd.getDecimals())); 
         }
 
     }
@@ -63,10 +67,10 @@ public class Trader extends User{
         if (cryptoIndex < 0) { //Create new crypto and set its balance to amount.      
             if (amount <= 0) throw new Exception("Cannot add a negative amount of " + cryptoToAdd.getSymbol() + " to Trader " + this.username);
             cryptos.add(cryptoToAdd);
-            cryptosBalance.add((double) amount);
+            cryptosBalance.add(round(amount, cryptoToAdd.getDecimals()));
         } else { //Increment balance by amount. 
             if (amount < 0 && amount > cryptosBalance.get(cryptoIndex)) throw new Exception("Trader " + this.username + " does not have " + cryptoToAdd.getSymbol() + -amount + " in their wallet.");
-            cryptosBalance.set(cryptoIndex,cryptosBalance.get(cryptoIndex) + (double) amount); 
+            cryptosBalance.set(cryptoIndex,cryptosBalance.get(cryptoIndex) + round(amount, cryptoToAdd.getDecimals())); 
         }
 
     }
@@ -112,7 +116,7 @@ public class Trader extends User{
 
         if (existsCrypto(crypto) < 0) throw new Exception("Trader is attempting to sell with a fiat currency he does not own.");
 
-        MarketOrder order = new MarketOrder(this, OrderType.SELL, amount, crypto, fiat);
+        MarketOrder order = new MarketOrder(this, OrderType.SELL, round(amount, crypto.getDecimals()), crypto, fiat);
         OrderBook.pushOrder(order);
         MatchingEngine.add(order);
     }
@@ -128,7 +132,7 @@ public class Trader extends User{
         //Check that fiat is valid
         if (existsFiat(fiat) < 0) throw new Exception("Trader is attempting to buy with a fiat currency he does not own.");
         
-        MarketOrder order = new MarketOrder(this, OrderType.BUY, amount, crypto, fiat);
+        MarketOrder order = new MarketOrder(this, OrderType.BUY, round(amount, crypto.getDecimals()), crypto, fiat);
         OrderBook.pushOrder(order);
         MatchingEngine.add(order);
 
@@ -144,7 +148,7 @@ public class Trader extends User{
 
         if (existsFiat(fiat) < 0) throw new Exception("Trader is attempting to buy with a fiat currency he does not own.");
         
-        LimitOrder order = new LimitOrder(this, OrderType.BUY, amount, crypto, fiat, limit);
+        LimitOrder order = new LimitOrder(this, OrderType.BUY, round(amount, crypto.getDecimals()), crypto, fiat, limit);
         OrderBook.pushOrder(order);
         MatchingEngine.add(order);
 

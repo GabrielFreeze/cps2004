@@ -29,17 +29,18 @@ public class OrderBook {
 
     public static void printOrderBook() {
 
-        System.out.println("\n\nID\tTRADER\tTYPE\tPAIR\tQUANTITY\tSTATUS");
-        System.out.println("------------------------------------------------------");
+        System.out.println("\n\nID\tTRADER\tTYPE\tPAIR\tQUANTITY\tVOL EXEC'D\tSTATUS");
+        System.out.println("--------------------------------------------------------------------------------");
         
         for (int i = orderBook.size()-1 ; i >= 0; i--) {
             Order o = orderBook.get(i);
             System.out.println(
-                o.getId()+"\t"+
-                o.getTrader().getUsername()+"\t"+
-                o.getType()+"\t"+
-                o.getFrom().getSymbol()+"/"+o.getTo().getSymbol()+"\t"+
-                o.getQuantity()+"\t\t"+
+                o.getId()+"\t"                                         +
+                o.getTrader().getUsername()+"\t"                       +
+                o.getType()+"\t"                                       +
+                o.getFrom().getSymbol()+"/"+o.getTo().getSymbol()+"\t" +
+                o.getQuantity()+"\t\t"                                 +
+                o.getVolumeExecuted()+"%\t\t"                           +
                 o.getStatus());
         }
         System.out.println();
