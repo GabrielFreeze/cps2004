@@ -146,7 +146,7 @@ class HelloWorld {
             joe.sell(4, btc, euro);
             MatchingEngine.printQueue();
 
-            /* The Matching Engine reliases it could match trader's buy order with joe's sell order.
+            /* The Matching Engine realises it could match trader's buy order with joe's sell order.
             Since trader only wants 2 btc, his order will be fullfilled. However joe's order still needs to sell
             the remaioning 2 btc. */
             MatchingEngine.update();
