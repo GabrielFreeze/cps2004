@@ -1,5 +1,5 @@
-cd ~/cps2004/task2/pakSource;
+cd ~/cps2004/task2/;
 javac -d ~/cps2004/task2 *.java;
 cd ~/cps2004/task2;
-javac HelloWorld.java;
-java HelloWorld
+javac cryptoPackageLauncher.java;
+java cryptoPackageLauncher
