@@ -7,6 +7,7 @@ class cryptoPackageLauncher {
         Then the trader must accept the approval by referencing the admin that approved him.*/
         
         //TODO: Create an error system
+        //TODO: Update addMatchedTrader to also include how much quantity was shaved off by a trader.
 
 
         //  _   _
@@ -144,13 +145,13 @@ class cryptoPackageLauncher {
             //Joe wishes to sell 4 BTC for the equivalent in euros.
             //This order is added to the orderbook and remains UNFULFILLED
             joe.sell(4, btc, euro);
-            MatchingEngine.printQueue();
+            // MatchingEngine.printQueue();
 
             /* The Matching Engine realises it could match trader's buy order with joe's sell order.
             Since trader only wants 2 btc, his order will be fullfilled. However joe's order still needs to sell
             the remaioning 2 btc. */
             MatchingEngine.update();
-            MatchingEngine.printQueue();
+            // MatchingEngine.printQueue();
             
             //Trader's wallet.
             System.out.println("Trader's BTC wallet:\t" + trader.getBalance(btc));
@@ -163,7 +164,7 @@ class cryptoPackageLauncher {
             OrderBook.printOrderBook();
 
             //Trader will place a buy limit order for when the price of BTC (exchange rate) is 50 or less.
-            trader.buy(2, btc, euro, 50);
+            int orderID = trader.buy(10, btc, euro, 50);
 
             /*The new order is not matched with joe's partially filled order as the 
             price of BTC has not met the limit order's condition.*/
@@ -185,6 +186,21 @@ class cryptoPackageLauncher {
             //Joe's wallet.
             System.out.println("Joe's BTC wallet:\t" + joe.getBalance(btc));
             System.out.println("Joe's euro wallet:\t" + joe.getBalance(euro));
+
+
+
+            /*Trader decides to cancel his order of 10 btc, despite already buying 2.
+            This will remove the order from the Matching Engine Queue and update it's status on the Order Book.*/
+            trader.printActiveOrders();
+            trader.cancel(orderID);
+            trader.printActiveOrders();
+
+
+            /*Joe is now selling 4 BTC, however since trader cancelled his buy order, joe's order won't
+            be matched by anyone.*/
+            joe.sell(4,btc,euro);
+            MatchingEngine.update();
+            OrderBook.printOrderBook();
 
                        
         } catch (Exception e) {

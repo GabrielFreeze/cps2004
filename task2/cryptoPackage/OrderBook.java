@@ -29,6 +29,8 @@ public class OrderBook {
 
     public static void printOrderBook() {
 
+        System.out.println("\n\nORDER BOOK:");
+
         System.out.println("\n\nID\tTRADER\tTYPE\tPAIR\tQUANTITY\tVOL EXEC'D\tSTATUS");
         System.out.println("--------------------------------------------------------------------------------");
         
@@ -40,7 +42,7 @@ public class OrderBook {
                 o.getType()+"\t"                                       +
                 o.getFrom().getSymbol()+"/"+o.getTo().getSymbol()+"\t" +
                 o.getQuantity()+"\t\t"                                 +
-                o.getVolumeExecuted()+"%\t\t"                           +
+                o.getVolumeExecuted()+"%\t\t"                          +
                 o.getStatus());
         }
         System.out.println();

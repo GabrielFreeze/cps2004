@@ -42,7 +42,7 @@ public class MatchingEngine {
             for (Order p : queue) {
                 
                 //Preliminary plumbing
-                if (o instanceof LimitOrder && !limitOrderReady((LimitOrder) o) ||
+                if (o instanceof LimitOrder && !limitOrderReady((LimitOrder) o)  ||
                     p instanceof LimitOrder && !limitOrderReady((LimitOrder) p)) continue;
 
                 if (o == p                          ||
@@ -52,15 +52,39 @@ public class MatchingEngine {
                     p.getTo() != o.getTo())         continue;
 
                     
-                //If p did not go into the if statement, then it is a valid match for o.
+                
+                //Check that o and p have enough crypto/fiat to make the trade.
+                
+                double buyBal = 0;
+                double sellBal = 0;
+                double amount = o.getQuantityRemaining() > p.getQuantityRemaining()? p.getQuantityRemaining() : o.getQuantityRemaining();
+                
+                Order buy;
+                Order sell;
 
-                if (o.getType() == OrderType.BUY && p.getType() == OrderType.SELL) {
-                    matchOrders(o, p);
+                if (o.getType() == OrderType.BUY) {
+                    buy = o;
+                    sell = p;
+                } else {
+                    buy = p;
+                    sell = o;
                 }
-                else {
-                    matchOrders(p, o);
-                }
+
+
+                try {
+                    buyBal = buy.getTrader().getBalance(buy.getTo());
+                    sellBal = sell.getTrader().getBalance(sell.getFrom());
+                } catch (Exception e) {Error.handleError(e);}
+                
                     
+                /*If buyer doesn't have enough fiat to pay the seller,
+                or the seller doesn't have enough crypto to give to the buyer. */
+                if (buyBal < amount * p.getFrom().getExchangeRate() * p.getTo().getExchangeRate() ||
+                    sellBal < amount)                                                             continue;
+
+                //Handle the transfer of coins.
+                matchOrders(buy, sell);
+                
             }
         }
         
@@ -75,29 +99,17 @@ public class MatchingEngine {
         sell.addMatchedTrader(buy.getTrader());
         
 
-        //Calculate how much FIAT does the CRYPTO cost.
-        //First exchanges it into price in euros, then exchanges it into price in FROM.
-        double amountInFiat = buy.getQuantityRemaining() * sell.getFrom().getExchangeRate() * sell.getTo().getExchangeRate();
         
         try {
-            
-            /*Subtract the crypto that just got sold from Order sell's trader and
-            add the crypto to Order buy's Trader*/
+            //The amount which should be subtracted from each order
+            double amount = sell.getQuantityRemaining() > buy.getQuantityRemaining()? buy.getQuantityRemaining() : sell.getQuantityRemaining();
 
-            if (sell.getQuantityRemaining() > buy.getQuantityRemaining()){
-                sell.getTrader().addCrypto(-buy.getQuantityRemaining(), sell.getFrom());
-                buy.getTrader().addCrypto(buy.getQuantityRemaining(), sell.getFrom());
-            }
-            else {
-                sell.getTrader().addCrypto(-sell.getQuantityRemaining(), sell.getFrom());
-                buy.getTrader().addCrypto(sell.getQuantityRemaining(), sell.getFrom());
-            }
-            
-            //Add the fiat to Order sell's Trader
-            sell.getTrader().addFiat(amountInFiat, sell.getTo());
+            //The price in Fiat which the seller will recieve from the buyer.
+            double amountInFiat = amount * sell.getFrom().getExchangeRate() * sell.getTo().getExchangeRate();
 
-            //Remove the fiat from Order buy's Trader
-            buy.getTrader().addFiat(-amountInFiat, buy.getTo());
+            //Transfer the crypto which the buyer bought from the seller.
+            sell.getTrader().addCrypto(-amount, sell.getFrom());
+            buy.getTrader().addCrypto(amount, sell.getFrom());
             
             //Update the order's remaining quantity
             double buyQuantity = buy.getQuantityRemaining();
@@ -105,9 +117,14 @@ public class MatchingEngine {
             
             buy.setQuantityRemaining(buyQuantity-sellQuantity);
             sell.setQuantityRemaining(sellQuantity-buyQuantity);
-            System.out.println("Buyer Remaining Quantity: " + buy.getQuantityRemaining());
-            System.out.println("Seller Remaining Quantity: " + sell.getQuantityRemaining());
 
+            //Add the fiat to Order sell's Trader
+            sell.getTrader().addFiat(amountInFiat, sell.getTo());
+            
+            //Remove the fiat from Order buy's Trader
+            buy.getTrader().addFiat(-amountInFiat, buy.getTo());
+            
+            
         } catch (Exception e) {Error.handleError(e);}
 
         //Update orders' status
@@ -115,11 +132,13 @@ public class MatchingEngine {
         if (sell.getQuantityRemaining() <= 0) {
             sell.setStatus(OrderStatus.FILLED);
             queue.remove(sell);
+            sell.getTrader().removeActiveOrder(sell);
         } else sell.setStatus(OrderStatus.PARTIALLY_FILLED);
 
         if (buy.getQuantityRemaining() <= 0) {
             buy.setStatus(OrderStatus.FILLED);
             queue.remove(buy);
+            buy.getTrader().removeActiveOrder(buy);
         } else buy.setStatus(OrderStatus.PARTIALLY_FILLED);
 
         

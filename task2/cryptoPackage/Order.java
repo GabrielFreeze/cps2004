@@ -45,6 +45,7 @@ class Order {
         return copy;
     }
     protected void addMatchedTrader(Trader trader) {
+        //TODO: Update addMatchedTrader to also include how much quantity was shaved off by a trader.
         matchedTraders.add(trader);
     }
 
@@ -70,10 +71,6 @@ class Order {
 
     protected void setStatus(OrderStatus status) {
         this.status = status;
-
-        if (status == OrderStatus.CANCELLED) {
-            MatchingEngine.remove(this);
-        }
     }
     protected void setQuantityRemaining(double quantityRemaining) {
         this.quantityRemaining = Math.max(0, Math.min(quantity, quantityRemaining));
