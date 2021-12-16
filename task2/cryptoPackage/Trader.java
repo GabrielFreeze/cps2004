@@ -1,5 +1,6 @@
 package cryptoPackage;
 import java.util.ArrayList;
+import java.util.Collections;
 public class Trader extends User{
 
 
@@ -7,11 +8,14 @@ public class Trader extends User{
     protected Boolean approved;
 
     
-    protected ArrayList<Crypto> cryptos = new ArrayList<Crypto>();        //The cryptos the trader has.
-    protected ArrayList<Double> cryptosBalance = new ArrayList<Double>(); //The amounts the trader has relating to a crypto.
+    private ArrayList<Crypto> cryptos = new ArrayList<Crypto>();        //The cryptos the trader has.
+    private ArrayList<Double> cryptosBalance = new ArrayList<Double>(); //The amounts the trader has relating to a crypto.
 
-    public ArrayList<Fiat> fiats = new ArrayList<Fiat>();              //The fiat the trader has.
-    public ArrayList<Double> fiatsBalance = new ArrayList<Double>();   //The amounts the trader has relating to a fiat.
+    private ArrayList<Fiat> fiats = new ArrayList<Fiat>();              //The fiat the trader has.
+    private ArrayList<Double> fiatsBalance = new ArrayList<Double>();   //The amounts the trader has relating to a fiat.
+
+
+    private ArrayList<Order> activeOrders = new ArrayList<Order>();
 
 
     public Trader(String username, String password) {
@@ -108,7 +112,15 @@ public class Trader extends User{
     }
 
 
-    public void sell(double amount, Crypto crypto, Fiat fiat) throws Exception {
+    private void pushActiveOrder(Order order) {
+        activeOrders.add(order);
+    }
+    protected void removeActiveOrder(Order order) {
+        activeOrders.remove(order);
+    }
+
+
+    public int sell(double amount, Crypto crypto, Fiat fiat) throws Exception {
         assertLogin();
         //amount: How much will the user sell of crypto
         //crypto: The coin which the user will be selling
@@ -117,12 +129,16 @@ public class Trader extends User{
         if (existsCrypto(crypto) < 0) throw new Exception("Trader is attempting to sell with a fiat currency he does not own.");
 
         MarketOrder order = new MarketOrder(this, OrderType.SELL, round(amount, crypto.getDecimals()), crypto, fiat);
+        
         OrderBook.pushOrder(order);
         MatchingEngine.add(order);
+        pushActiveOrder(order);
+
+        return order.getId();
     }
 
     //MarketOrder Buy.
-    public void buy(double amount, Crypto crypto, Fiat fiat) throws Exception {
+    public int buy(double amount, Crypto crypto, Fiat fiat) throws Exception {
         //amount: How much will the user buy of crypto
         //crypto: The coin which the user will be buying
         //fiat: What fiat currency will he use to buy crypto.
@@ -133,13 +149,17 @@ public class Trader extends User{
         if (existsFiat(fiat) < 0) throw new Exception("Trader is attempting to buy with a fiat currency he does not own.");
         
         MarketOrder order = new MarketOrder(this, OrderType.BUY, round(amount, crypto.getDecimals()), crypto, fiat);
+        
         OrderBook.pushOrder(order);
         MatchingEngine.add(order);
+        pushActiveOrder(order);
+
+        return order.getId();
 
     }
     
     //LimitOrder Buy.
-    public void buy(double amount, Crypto crypto, Fiat fiat, double limit) throws Exception{
+    public int buy(double amount, Crypto crypto, Fiat fiat, double limit) throws Exception{
         assertLogin();
         //amount: How much will the user buy of crypto
         //crypto: The coin which the user will be buying
@@ -149,11 +169,53 @@ public class Trader extends User{
         if (existsFiat(fiat) < 0) throw new Exception("Trader is attempting to buy with a fiat currency he does not own.");
         
         LimitOrder order = new LimitOrder(this, OrderType.BUY, round(amount, crypto.getDecimals()), crypto, fiat, limit);
+        
         OrderBook.pushOrder(order);
         MatchingEngine.add(order);
+        pushActiveOrder(order);
+
+        return order.getId();
 
     }
 
+
+    public void cancel(int id) throws Exception{
+        
+        for (Order order: activeOrders) {
+            if (order.getId() == id) {
+                removeActiveOrder(order);
+                MatchingEngine.remove(order);
+                order.setStatus(OrderStatus.CANCELLED);
+                return;
+            }
+        }
+        throw new Exception("No Order with ID "+ id +" was found in Trader "+ username);
+    }
+
+    public ArrayList<Order> getActiveOrdersCopy() {
+        ArrayList<Order> copy = new ArrayList<Order>();
+        Collections.copy(copy,activeOrders);
+        
+        return copy;
+    }
+    public void printActiveOrders() {
+        System.out.println("\n\n"+username+"'S ACTIVE ORDERS    :");
+        System.out.println("\n\nID\tTRADER\tTYPE\tPAIR\tQUANTITY\tVOL EXEC'D\tSTATUS");
+        System.out.println("--------------------------------------------------------------------------------");
+        
+        for (int i = activeOrders.size()-1 ; i >= 0; i--) {
+            Order o = activeOrders.get(i);
+            System.out.println(
+                o.getId()+"\t"                                         +
+                o.getTrader().getUsername()+"\t"                       +
+                o.getType()+"\t"                                       +
+                o.getFrom().getSymbol()+"/"+o.getTo().getSymbol()+"\t" +
+                o.getQuantity()+"\t\t"                                 +
+                o.getVolumeExecuted()+"%\t\t"                          +
+                o.getStatus());
+        }
+        System.out.println();
+    }
     public ArrayList<Order> getOrderBookCopy() {
         return OrderBook.copyOrderBook();
     }
