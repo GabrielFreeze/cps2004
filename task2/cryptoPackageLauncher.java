@@ -118,7 +118,8 @@ class cryptoPackageLauncher {
 
         Crypto btc = new Crypto("$BTC", 8, 100, 1000.0);
         Crypto doge = new Crypto("$DOGE", 8, 845, 1000.0);
-        
+
+        MatchingEngine matchingEngine = MatchingEngine.getInstance();
         try {
             trader.addFiat(10000, euro);                       //Trader adds €10 to his account.
             trader.addFiat(20, dollar);                     //Trader adds $10 to his account.
@@ -137,21 +138,21 @@ class cryptoPackageLauncher {
             //The trader wishes to use his EUROS to buy some BTC.
             //This order is added to the orderbook and remains UNFULFILLED.
             trader.buy(2, btc, euro);
-            MatchingEngine.printQueue();
+            matchingEngine.printQueue();
 
             //The Matching Engine attempts to match any orders but does not find any
-            MatchingEngine.update();
+            matchingEngine.update();
 
             //Joe wishes to sell 4 BTC for the equivalent in euros.
             //This order is added to the orderbook and remains UNFULFILLED
             joe.sell(4, btc, euro);
-            // MatchingEngine.printQueue();
+            // matchingEngine.printQueue();
 
             /* The Matching Engine realises it could match trader's buy order with joe's sell order.
             Since trader only wants 2 btc, his order will be fullfilled. However joe's order still needs to sell
             the remaioning 2 btc. */
-            MatchingEngine.update();
-            // MatchingEngine.printQueue();
+            matchingEngine.update();
+            // matchingEngine.printQueue();
             
             //Trader's wallet.
             System.out.println("Trader's BTC wallet:\t" + trader.getBalance(btc));
@@ -168,7 +169,7 @@ class cryptoPackageLauncher {
 
             /*The new order is not matched with joe's partially filled order as the 
             price of BTC has not met the limit order's condition.*/
-            MatchingEngine.update();
+            matchingEngine.update();
             OrderBook.printOrderBook();
 
             /*In a real world application this function would be applied on the actual value of BTC,
@@ -176,7 +177,7 @@ class cryptoPackageLauncher {
             btc.setExchangeRate(50);
             
             /*Since the limit order can now be executed, it will be matched with joe's previous order*/
-            MatchingEngine.update();
+            matchingEngine.update();
             OrderBook.printOrderBook();
             
             //Trader's wallet.
@@ -199,7 +200,7 @@ class cryptoPackageLauncher {
             /*Joe is now selling 4 BTC, however since trader cancelled his buy order, joe's order won't
             be matched by anyone.*/
             joe.sell(4,btc,euro);
-            MatchingEngine.update();
+            matchingEngine.update();
             OrderBook.printOrderBook();
 
                        

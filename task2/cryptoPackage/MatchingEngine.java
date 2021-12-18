@@ -2,6 +2,7 @@ package cryptoPackage;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
+//MatchingEngine is a singleton class.
 public class MatchingEngine {
 
     private static Comparator<Order> orderComparator = new Comparator<Order>() {
@@ -10,21 +11,27 @@ public class MatchingEngine {
         }
     };
 
+    private static MatchingEngine matchingEngine = null;
+    private PriorityQueue<Order> queue = new PriorityQueue<Order>(orderComparator);
 
-    private static PriorityQueue<Order> queue = new PriorityQueue<Order>(orderComparator);
 
-    protected static void add(Order order) {
+    public static MatchingEngine getInstance() {
+        if (matchingEngine == null) matchingEngine = new MatchingEngine();
+        return matchingEngine;
+    }
+
+    protected void add(Order order) {
         queue.add(order);
     }
-    protected static void remove(Order order) {
+    protected void remove(Order order) {
         queue.remove(order);
     }
 
-    public static void printQueue() {
+    public void printQueue() {
         System.out.println("Matching Engine Order Queue: " + queue);
     }
 
-    public static Boolean limitOrderReady(LimitOrder order) {
+    public Boolean limitOrderReady(LimitOrder order) {
        
         if (order.getType() == OrderType.BUY) //Returns true if the price of FROM is less than the bid price. 
             return order.getFrom().getExchangeRate() <= order.getBidask();
@@ -34,7 +41,7 @@ public class MatchingEngine {
     }
 
 
-    public static int update() {
+    public int update() {
         //For every order, traverse down the queue and find any matching order
 
         for (Order o : queue) {
@@ -92,7 +99,7 @@ public class MatchingEngine {
     }
 
 
-    private static void matchOrders(Order buy, Order sell) {
+    private void matchOrders(Order buy, Order sell) {
         
         //Mention which traders fulfilled orders buy and sell.
         buy.addMatchedTrader(sell.getTrader());

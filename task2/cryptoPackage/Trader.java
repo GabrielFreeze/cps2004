@@ -16,11 +16,12 @@ public class Trader extends User{
 
 
     private ArrayList<Order> activeOrders = new ArrayList<Order>();
-
+    private MatchingEngine matchingEngine;
 
     public Trader(String username, String password) {
         super(username, password);
         registered = false;
+        matchingEngine = MatchingEngine.getInstance();
     }
 
     private static double round(double x, double d) {
@@ -131,7 +132,7 @@ public class Trader extends User{
         MarketOrder order = new MarketOrder(this, OrderType.SELL, round(amount, crypto.getDecimals()), crypto, fiat);
         
         OrderBook.pushOrder(order);
-        MatchingEngine.add(order);
+        matchingEngine.add(order);
         pushActiveOrder(order);
 
         return order.getId();
@@ -151,7 +152,7 @@ public class Trader extends User{
         MarketOrder order = new MarketOrder(this, OrderType.BUY, round(amount, crypto.getDecimals()), crypto, fiat);
         
         OrderBook.pushOrder(order);
-        MatchingEngine.add(order);
+        matchingEngine.add(order);
         pushActiveOrder(order);
 
         return order.getId();
@@ -171,7 +172,7 @@ public class Trader extends User{
         LimitOrder order = new LimitOrder(this, OrderType.BUY, round(amount, crypto.getDecimals()), crypto, fiat, limit);
         
         OrderBook.pushOrder(order);
-        MatchingEngine.add(order);
+        matchingEngine.add(order);
         pushActiveOrder(order);
 
         return order.getId();
@@ -184,7 +185,7 @@ public class Trader extends User{
         for (Order order: activeOrders) {
             if (order.getId() == id) {
                 removeActiveOrder(order);
-                MatchingEngine.remove(order);
+                matchingEngine.remove(order);
                 order.setStatus(OrderStatus.CANCELLED);
                 return;
             }
