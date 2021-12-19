@@ -17,22 +17,24 @@ public class Trader extends User{
 
     private ArrayList<Order> activeOrders = new ArrayList<Order>();
     private MatchingEngine matchingEngine;
+    private OrderBook orderBook;
 
     public Trader(String username, String password) {
         super(username, password);
         registered = false;
         matchingEngine = MatchingEngine.getInstance();
+        orderBook = OrderBook.getInstance();
     }
 
     private static double round(double x, double d) {
         double y = Math.pow(10,d);
         return (double) Math.round(x*y)/y;
     }
-    public void addFiat(double amount, Fiat fiatToAdd) throws Exception {
+    public void addFiat(double amount, Fiat fiatToAdd) throws java.lang.Error {
         //In a real world application, a bank's API will handle the transferring of cash.
         //However, just as a proof of concept, fiat currencies can simply be added regardless.
         //Checks with the bank can be made in this function.
-        assertLogin();
+        // assertLogin();
     
         int fiatIndex = -1;
 
@@ -44,21 +46,21 @@ public class Trader extends User{
         }
 
         if (fiatIndex < 0) { //Create new fiat and set its balance to amount.      
-            if (amount <= 0) throw new Exception("Cannot add a negative amount of " + fiatToAdd.getSymbol() + " to Trader " + this.username);
+            if (amount <= 0) throw new java.lang.Error("Cannot add a negative amount of " + fiatToAdd.getSymbol() + " to Trader " + this.username);
             fiats.add(fiatToAdd);
             fiatsBalance.add(round(amount, fiatToAdd.getDecimals()));
             
         } else { //Increment balance by amount.
-            if (amount < 0 && -amount > fiatsBalance.get(fiatIndex)) throw new Exception("Trader " + this.username + " does not have " + fiatToAdd.getSymbol() + -amount + " in their wallet.");
+            if (amount < 0 && -amount > fiatsBalance.get(fiatIndex)) throw new java.lang.Error("Trader " + this.username + " does not have " + fiatToAdd.getSymbol() + -amount + " in their wallet.");
             fiatsBalance.set(fiatIndex,fiatsBalance.get(fiatIndex) + round(amount, fiatToAdd.getDecimals())); 
         }
 
     }
 
-    public void addCrypto(double amount, Crypto cryptoToAdd) throws Exception {
+    protected void addCrypto(double amount, Crypto cryptoToAdd) throws java.lang.Error {
         //Assume that when a trader addsCrypto he is merely transfering the crypto coins from another wallet into the current one.
         //A real world application can handle the transfer in this function. 
-        assertLogin();
+        // assertLogin();
         
         int cryptoIndex = -1;
 
@@ -70,16 +72,16 @@ public class Trader extends User{
         }
 
         if (cryptoIndex < 0) { //Create new crypto and set its balance to amount.      
-            if (amount <= 0) throw new Exception("Cannot add a negative amount of " + cryptoToAdd.getSymbol() + " to Trader " + this.username);
+            if (amount <= 0) throw new java.lang.Error("Cannot add a negative amount of " + cryptoToAdd.getSymbol() + " to Trader " + this.username);
             cryptos.add(cryptoToAdd);
             cryptosBalance.add(round(amount, cryptoToAdd.getDecimals()));
         } else { //Increment balance by amount. 
-            if (amount < 0 && amount > cryptosBalance.get(cryptoIndex)) throw new Exception("Trader " + this.username + " does not have " + cryptoToAdd.getSymbol() + -amount + " in their wallet.");
+            if (amount < 0 && amount > cryptosBalance.get(cryptoIndex)) throw new java.lang.Error("Trader " + this.username + " does not have " + cryptoToAdd.getSymbol() + -amount + " in their wallet.");
             cryptosBalance.set(cryptoIndex,cryptosBalance.get(cryptoIndex) + round(amount, cryptoToAdd.getDecimals())); 
         }
 
     }
-    public int existsFiat(Coin coin) {
+    protected int existsFiat(Coin coin) {
         //Check for the coin in fiats
         for (int i = 0; i < fiats.size(); i++) {
             if (fiats.get(i) == coin) return i;
@@ -87,7 +89,7 @@ public class Trader extends User{
 
         return -1;
     }
-    public int existsCrypto(Coin coin) {
+    protected int existsCrypto(Coin coin) {
 
         //Check for the coin in cryptos
         for (int i = 0; i < cryptos.size(); i++) {
@@ -98,22 +100,26 @@ public class Trader extends User{
 
     }
     
-    public double getBalance(Coin coin) throws Exception{
+    //Temporary Dummy Method
+    public void _addCrypto(double amount, Crypto cryptoToAdd) throws java.lang.Error {
+        addCrypto(amount,cryptoToAdd);
+    }
+
+    public double getBalance(Coin coin) throws java.lang.Error{
         
-        assertLogin();
+        // assertLogin();
 
         int indexFiat = existsFiat(coin);
         int indexCrypto = existsCrypto(coin);
 
         if (indexFiat >= 0)        return fiatsBalance.get(indexFiat);
         else if (indexCrypto >= 0) return cryptosBalance.get(indexCrypto);
-        else                       throw new Exception("Coin " + coin.getSymbol() +" does not exist in Trader's account.");
+        else                       throw new java.lang.Error("Coin " + coin.getSymbol() +" does not exist in Trader's account.");
 
 
     }
 
-
-    private void pushActiveOrder(Order order) {
+    protected void pushActiveOrder(Order order) {
         activeOrders.add(order);
     }
     protected void removeActiveOrder(Order order) {
@@ -121,8 +127,39 @@ public class Trader extends User{
     }
 
 
+    public Boolean transfer(double amount, Fiat fiat, int bankId) throws Exception{
+        /*In a real world application, a Bank's API can be used to actually transfer funds
+        from a bank account into a trader's profile. However for the scope of this unit, the
+        funds are transfered from nowehere. */
+        assertLogin();
+
+        addFiat(amount,fiat);
+
+        return true;
+
+    }
+
+    public int sell(double amount, Crypto crypto, Fiat fiat, double limit) throws Exception {
+        assertLogin();
+        assertApproved();
+        //amount: How much will the user buy of crypto
+        //crypto: The coin which the user will be buying
+        //coinIndex: What currency will he use to buy crypto.
+        //limit: What should be the price of crypto before the order is available for execution.
+
+        if (existsCrypto(crypto) < 0) throw new Exception("Trader is attempting to buy with a crypto currency he does not own.");
+        
+        LimitOrder order = new LimitOrder(this, OrderType.SELL, round(amount, crypto.getDecimals()), crypto, fiat, limit);
+        
+        orderBook.pushOrder(order);
+        matchingEngine.add(order);
+        pushActiveOrder(order);
+
+        return order.getId();
+    }
     public int sell(double amount, Crypto crypto, Fiat fiat) throws Exception {
         assertLogin();
+        assertApproved();
         //amount: How much will the user sell of crypto
         //crypto: The coin which the user will be selling
         //fiat: What fiat currency will he get.
@@ -131,7 +168,7 @@ public class Trader extends User{
 
         MarketOrder order = new MarketOrder(this, OrderType.SELL, round(amount, crypto.getDecimals()), crypto, fiat);
         
-        OrderBook.pushOrder(order);
+        orderBook.pushOrder(order);
         matchingEngine.add(order);
         pushActiveOrder(order);
 
@@ -145,13 +182,14 @@ public class Trader extends User{
         //fiat: What fiat currency will he use to buy crypto.
 
         assertLogin();
+        assertApproved();
 
         //Check that fiat is valid
         if (existsFiat(fiat) < 0) throw new Exception("Trader is attempting to buy with a fiat currency he does not own.");
         
         MarketOrder order = new MarketOrder(this, OrderType.BUY, round(amount, crypto.getDecimals()), crypto, fiat);
         
-        OrderBook.pushOrder(order);
+        orderBook.pushOrder(order);
         matchingEngine.add(order);
         pushActiveOrder(order);
 
@@ -162,6 +200,7 @@ public class Trader extends User{
     //LimitOrder Buy.
     public int buy(double amount, Crypto crypto, Fiat fiat, double limit) throws Exception{
         assertLogin();
+        assertApproved();
         //amount: How much will the user buy of crypto
         //crypto: The coin which the user will be buying
         //coinIndex: What currency will he use to buy crypto.
@@ -171,7 +210,7 @@ public class Trader extends User{
         
         LimitOrder order = new LimitOrder(this, OrderType.BUY, round(amount, crypto.getDecimals()), crypto, fiat, limit);
         
-        OrderBook.pushOrder(order);
+        orderBook.pushOrder(order);
         matchingEngine.add(order);
         pushActiveOrder(order);
 
@@ -182,6 +221,9 @@ public class Trader extends User{
 
     public void cancel(int id) throws Exception{
         
+        assertLogin();
+        assertApproved();
+
         for (Order order: activeOrders) {
             if (order.getId() == id) {
                 removeActiveOrder(order);
@@ -218,33 +260,29 @@ public class Trader extends User{
         System.out.println();
     }
     public ArrayList<Order> getOrderBookCopy() {
-        return OrderBook.copyOrderBook();
+        return orderBook.copyOrderBook();
     }
 
-    public Boolean getRegistered() throws Exception {
-        assertLogin();
+    public Boolean getRegistered() {
         return registered;
     }
-    public void setRegistered(Boolean registered) throws Exception {
-        assertLogin();
+    public void setRegistered(Boolean registered) {
         this.registered = registered;
     }
     
-    public Boolean getApproved() throws Exception {
-        assertLogin();
+    public Boolean getApproved() {
         return approved;
     }
-    public void setApproved(Boolean approved, Admin admin) throws Exception {
-        assertLogin();
+    public Boolean setApproved(Boolean approved, Admin admin) {
 
-        if (!registered)
-            throw new Exception("Trader is not registered");
-        if (admin.getTraderToApprove() != this)
-            throw new Exception("Admin passed to setApproved must reference Trader to approve in traderToApprove in Admin");
+        if (!registered || admin.getTraderToApprove() != this)
+            return false;
         
         this.approved = approved;
-        
+        return true;
 
     }
-
+    public void assertApproved() throws IllegalAccessException {
+        if (!approved) throw new IllegalAccessException("User must be approbef to perform this action.");
+    }
 }

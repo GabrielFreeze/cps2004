@@ -2,7 +2,7 @@ package cryptoPackage;
 import java.util.ArrayList;
 import java.util.Collections;
 
-class Order {
+public class Order {
 
     private double quantity;      //The amount the trader is buying/selling.
     private double quantityRemaining;
@@ -11,7 +11,8 @@ class Order {
     private Fiat to;              //The coin the trader will get paid in / The coin the trader will use to buy.
 
     private double volumeExecuted;
-    private ArrayList<Trader> matchedTraders = new ArrayList<Trader>(); //The Trader that completed the order.
+    private ArrayList<Trader> matchedTraders = new ArrayList<Trader>();         //The Trader that completed the order.
+    private ArrayList<Double> matchedTradersBalance = new ArrayList<Double>();   //The Balance corresponding to the trader with the sae index in matchedTraders
     private static int count = 0;
     private int id;
     private OrderType type;     
@@ -34,7 +35,7 @@ class Order {
     protected double getQuantityRemaining() {
         return quantityRemaining;
     }
-    protected Trader getTrader() {
+    public Trader getTrader() {
         return trader;
     }
     protected ArrayList<Trader> getMatchedTraders() {
@@ -44,9 +45,30 @@ class Order {
         
         return copy;
     }
-    protected void addMatchedTrader(Trader trader) {
+    protected void addMatchedTrader(Trader trader, double amount) {
         //TODO: Update addMatchedTrader to also include how much quantity was shaved off by a trader.
-        matchedTraders.add(trader);
+        
+        //Find if trader is already in list
+
+        int index = -1;
+
+        for (int i = 0; i < matchedTraders.size(); i++) {
+            if (matchedTraders.get(i) == trader) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index == -1) {
+            index = matchedTraders.size();
+            matchedTraders.add(trader);
+        }
+
+        //Update quantity for found matched trader.
+        matchedTradersBalance.set(index,amount);
+        
+        
+        
     }
 
     protected Crypto getFrom() {
@@ -68,7 +90,6 @@ class Order {
         return volumeExecuted;
     }
 
-
     protected void setStatus(OrderStatus status) {
         this.status = status;
     }
@@ -76,6 +97,14 @@ class Order {
         this.quantityRemaining = Math.max(0, Math.min(quantity, quantityRemaining));
         volumeExecuted = (double) Math.round((1 - this.quantityRemaining/quantity)*10000.0)/100.0;
 
+    }
+    
+    public ArrayList<Trader> getTradersMatched() {
+        return matchedTraders;
+    }
+
+    public ArrayList<Double> getTradersMatchedBalance() {
+        return matchedTradersBalance;
     }
 
 }

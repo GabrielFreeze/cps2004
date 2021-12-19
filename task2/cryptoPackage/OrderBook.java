@@ -3,14 +3,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class OrderBook {
-    protected static ArrayList<Order> orderBook = new ArrayList<Order>();
+    protected ArrayList<Order> orderBook = new ArrayList<Order>();
+    public static OrderBook instance = null;
 
-    protected static int pushOrder(Order order) {
+    private OrderBook() {}
+
+    public static OrderBook getInstance() {
+        if (instance == null) instance = new OrderBook();
+        return instance;
+
+    }
+
+    protected int pushOrder(Order order) {
         orderBook.add(order);
         return orderBook.size()-1; //Returns the index of the newly added element
     }
 
-    protected static int getOrderIndex(Order order) throws Exception{
+    protected int getOrderIndex(Order order) throws Exception{
         
         for (int i = 0; i < orderBook.size(); i++) {
             if (orderBook.get(i) == order) return i;
@@ -19,7 +28,7 @@ public class OrderBook {
         throw new Exception("Order " + order + " does not exist in order book.");
     }
 
-    protected static ArrayList<Order> copyOrderBook() {
+    protected ArrayList<Order> copyOrderBook() {
         
         ArrayList<Order> copy = new ArrayList<Order>();
         Collections.copy(copy,orderBook);
@@ -27,7 +36,7 @@ public class OrderBook {
         return copy;
     }
 
-    public static void printOrderBook() {
+    public void printOrderBook() {
 
         System.out.println("\n\nORDER BOOK:");
 
@@ -47,4 +56,14 @@ public class OrderBook {
         }
         System.out.println();
     }
+
+    public Order getOrder(int orderID) {
+        for (Order o : orderBook) {
+            if (o.getId() == orderID)
+                return o;
+        }
+
+        return null;
+    }
+
 }

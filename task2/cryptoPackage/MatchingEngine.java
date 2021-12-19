@@ -101,38 +101,35 @@ public class MatchingEngine {
 
     private void matchOrders(Order buy, Order sell) {
         
+    
+        
+        //The amount which should be subtracted from each order
+        double amount = sell.getQuantityRemaining() > buy.getQuantityRemaining()? buy.getQuantityRemaining() : sell.getQuantityRemaining();
+        
         //Mention which traders fulfilled orders buy and sell.
-        buy.addMatchedTrader(sell.getTrader());
-        sell.addMatchedTrader(buy.getTrader());
+        buy.addMatchedTrader(sell.getTrader(), amount);
+        sell.addMatchedTrader(buy.getTrader(), amount);
+
+        //The price in Fiat which the seller will recieve from the buyer.
+        double amountInFiat = amount * sell.getFrom().getExchangeRate() * sell.getTo().getExchangeRate();
+
+        //Transfer the crypto which the buyer bought from the seller.
+        sell.getTrader().addCrypto(-amount, sell.getFrom());
+        buy.getTrader().addCrypto(amount, sell.getFrom());
         
-
+        //Update the order's remaining quantity
+        double buyQuantity = buy.getQuantityRemaining();
+        double sellQuantity = sell.getQuantityRemaining();
         
-        try {
-            //The amount which should be subtracted from each order
-            double amount = sell.getQuantityRemaining() > buy.getQuantityRemaining()? buy.getQuantityRemaining() : sell.getQuantityRemaining();
+        buy.setQuantityRemaining(buyQuantity-sellQuantity);
+        sell.setQuantityRemaining(sellQuantity-buyQuantity);
 
-            //The price in Fiat which the seller will recieve from the buyer.
-            double amountInFiat = amount * sell.getFrom().getExchangeRate() * sell.getTo().getExchangeRate();
-
-            //Transfer the crypto which the buyer bought from the seller.
-            sell.getTrader().addCrypto(-amount, sell.getFrom());
-            buy.getTrader().addCrypto(amount, sell.getFrom());
+        //Add the fiat to Order sell's Trader
+        sell.getTrader().addFiat(amountInFiat, sell.getTo());
+        
+        //Remove the fiat from Order buy's Trader
+        buy.getTrader().addFiat(-amountInFiat, buy.getTo());
             
-            //Update the order's remaining quantity
-            double buyQuantity = buy.getQuantityRemaining();
-            double sellQuantity = sell.getQuantityRemaining();
-            
-            buy.setQuantityRemaining(buyQuantity-sellQuantity);
-            sell.setQuantityRemaining(sellQuantity-buyQuantity);
-
-            //Add the fiat to Order sell's Trader
-            sell.getTrader().addFiat(amountInFiat, sell.getTo());
-            
-            //Remove the fiat from Order buy's Trader
-            buy.getTrader().addFiat(-amountInFiat, buy.getTo());
-            
-            
-        } catch (Exception e) {Error.handleError(e);}
 
         //Update orders' status
 
@@ -147,8 +144,6 @@ public class MatchingEngine {
             queue.remove(buy);
             buy.getTrader().removeActiveOrder(buy);
         } else buy.setStatus(OrderStatus.PARTIALLY_FILLED);
-
-        
 
         
     }

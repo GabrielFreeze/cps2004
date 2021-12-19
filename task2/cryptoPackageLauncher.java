@@ -1,14 +1,13 @@
 import cryptoPackage.*;
 
+import java.util.ArrayList;
+
 class cryptoPackageLauncher {
     public static void main (String args[]) {
         /*For a trader to be approved, he must login and register.
         An admin must also login, and choose to approve this trader.
         Then the trader must accept the approval by referencing the admin that approved him.*/
         
-        //TODO: Create an error system
-        //TODO: Update addMatchedTrader to also include how much quantity was shaved off by a trader.
-
 
         //  _   _
         // | | | |___  ___ _ __ ___
@@ -20,84 +19,32 @@ class cryptoPackageLauncher {
         //Create a trader and an admin account.
         Trader trader = new Trader("trader","123");
         Trader joe = new Trader("joe", "joeyjoe");
+        Trader baba = new Trader("baba", "isyou");
         Admin admin =  new Admin("admin", "123");
         
-
-        //Admin logs in
-            try {      
-                admin.login("admin","123");
-            } catch (Exception e) {
-                System.out.println("The admin did not log in correctly.");
-                System.exit(0);
-            }
-
-
-        //Trader logs in
-            try {      
-                trader.login("trader","123");
-                joe.login("joe","joeyjoe");
-            } catch (Exception e) {
-                //The trader did not log in correctly.
-                System.out.println("The trader did not log in correctly.");
-                System.exit(0);
-            }
-
-
-        // Trader registers for approval
-            try {
-                trader.setRegistered(true);
-                joe.setRegistered(true);
-            } catch (Exception e) {
-                //Thr trader is not logged in
-                System.out.println("The trader is not logged in");
-                System.exit(0);
-            }
-
-
-        //Admin wants to register trader
-        try {
-            admin.setTraderToApprove(trader);
-        } catch (Exception e) {
-            //Admin may not be logged in
-            //Trader may not have registered to be approved
-            System.out.println("Admin could not approve trader");
-            System.exit(0);
-        }
         
-        //Trader can confirm approval request by referencing to the admin that approved him
         try {
-            trader.setApproved(true, admin);
-        } catch (Exception e) {
-            //Reference to admin that does not want trader to be approved
-            //Trader may not be registered to be approved.
-            System.out.println("Trader could not accept approval request");
-            System.exit(0);
-        }
             
-        //Admin wants to register trader
-        try {
+            //All accounts log in.
+            admin.login("admin","123");
+            trader.login("trader","123");
+            joe.login("joe","joeyjoe");
+            baba.login("baba", "isyou");
+            
+            //Traders register for approval
+            trader.setRegistered(true);
+            joe.setRegistered(true);
+    
+            //Admin approved traders.
+            admin.setTraderToApprove(trader);
             admin.setTraderToApprove(joe);
-        } catch (Exception e) {
-            //Admin may not be logged in
-            //Trader may not have registered to be approved
-            System.out.println("Admin could not approve trader");
-            System.exit(0);
-        }
-        
-        //Trader can confirm approval request by referencing to the admin that approved him
-        try {
+
+            //Traders must accept approval and reference the admin that approved them..
+            trader.setApproved(true, admin);
             joe.setApproved(true, admin);
-        } catch (Exception e) {
-            //Reference to admin that does not want trader to be approved
-            //Trader may not be registered to be approved.
-            System.out.println("Trader could not accept approval request");
-            System.exit(0);
-        }
 
-
-
-
-
+            
+        } catch (Exception e) {System.out.println(e.getMessage());}
 
 
 
@@ -109,9 +56,7 @@ class cryptoPackageLauncher {
         //     \____\___/|_|_| |_|___/
 
 
-        
-
-        
+                
         
         Fiat euro = new Fiat("€", 2, 1, 1000.0);            //A new Fiat coin was created
         Fiat dollar = new Fiat("$", 2, 1.12, 1000.0);          //A new Fiat coin was created
@@ -120,13 +65,28 @@ class cryptoPackageLauncher {
         Crypto doge = new Crypto("$DOGE", 8, 845, 1000.0);
 
         MatchingEngine matchingEngine = MatchingEngine.getInstance();
+        OrderBook orderBook = OrderBook.getInstance();
+        int orderID = -1;
         try {
-            trader.addFiat(10000, euro);                       //Trader adds €10 to his account.
-            trader.addFiat(20, dollar);                     //Trader adds $10 to his account.
+            trader.transfer(10000, euro, 123);                     //Trader adds €10 to his account.
+            trader.transfer(20, dollar, 123);                     //Trader adds $10 to his account.
             
-            joe.addFiat(200, dollar);
-            joe.addCrypto(200, btc);
-            joe.addCrypto(100, doge);
+            joe.transfer(200, dollar, 456);
+            baba.transfer(100, euro, 789);
+            
+            /* A user cannot decide to add crypto from thin air, however
+            for the sake of the demonstration let's assume that Joe already has
+            some crypto in his account.
+            
+            The method addCrypto would preferably be PROTECTED, like addFiat.
+            The launcher file should not have access to add funds to a trader's account
+            without the neccessary checks such as being logged in and approved.
+            However I created a dummy method for demonstration purposes, as I wanted to show
+            trades between 2 traders..*/
+
+            joe._addCrypto(200, btc);
+            joe._addCrypto(100, doge);
+
 
             System.out.println("Trader's euro balance: " + trader.getBalance(euro));      //10.00
             System.out.println("Trader's dollar balance: " + trader.getBalance(dollar));  //20.00
@@ -162,15 +122,15 @@ class cryptoPackageLauncher {
             System.out.println("Joe's BTC wallet:\t" + joe.getBalance(btc));
             System.out.println("Joe's euro wallet:\t" + joe.getBalance(euro));
             
-            OrderBook.printOrderBook();
+            orderBook.printOrderBook();
 
-            //Trader will place a buy limit order for when the price of BTC (exchange rate) is 50 or less.
-            int orderID = trader.buy(10, btc, euro, 50);
+            //Baba will place a buy limit order for when the price of BTC (exchange rate) is 50 or less.
+            orderID = baba.buy(10, btc, euro, 50);
 
             /*The new order is not matched with joe's partially filled order as the 
             price of BTC has not met the limit order's condition.*/
             matchingEngine.update();
-            OrderBook.printOrderBook();
+            orderBook.printOrderBook();
 
             /*In a real world application this function would be applied on the actual value of BTC,
             however in this example let's assume that the price has magically fallen.*/
@@ -178,36 +138,83 @@ class cryptoPackageLauncher {
             
             /*Since the limit order can now be executed, it will be matched with joe's previous order*/
             matchingEngine.update();
-            OrderBook.printOrderBook();
+            orderBook.printOrderBook();
             
-            //Trader's wallet.
-            System.out.println("Trader's BTC wallet:\t" + trader.getBalance(btc));
-            System.out.println("Trader's euro wallet:\t" + trader.getBalance(euro));
+            //Baba's wallet.
+            System.out.println("Baba's BTC wallet:\t" + baba.getBalance(btc));
+            System.out.println("Baba's euro wallet:\t" + baba.getBalance(euro));
 
             //Joe's wallet.
             System.out.println("Joe's BTC wallet:\t" + joe.getBalance(btc));
             System.out.println("Joe's euro wallet:\t" + joe.getBalance(euro));
 
 
-
-            /*Trader decides to cancel his order of 10 btc, despite already buying 2.
+            /*Baba decides to cancel his order of 10 btc, despite already buying 2.
             This will remove the order from the Matching Engine Queue and update it's status on the Order Book.*/
-            trader.printActiveOrders();
-            trader.cancel(orderID);
-            trader.printActiveOrders();
+            baba.printActiveOrders();
+            baba.cancel(orderID);
+            baba.printActiveOrders();
 
 
-            /*Joe is now selling 4 BTC, however since trader cancelled his buy order, joe's order won't
+            /*Joe is now selling 4 BTC, however since baba cancelled his buy order, joe's order won't
             be matched by anyone.*/
             joe.sell(4,btc,euro);
             matchingEngine.update();
-            OrderBook.printOrderBook();
+            orderBook.printOrderBook();
 
                        
         } catch (Exception e) {
+            /* If a trader is not logged in or is not approved by an administrator
+            and attempts to place orders, an exception is raised. A real world application
+            */
+
             System.out.println(e.getMessage());
         }
         
+        //  __  __                  _____                           _
+        // |  \/  | ___  _ __ ___  | ____|_  ____ _ _ __ ___  _ __ | | ___  ___
+        // | |\/| |/ _ \| '__/ _ \ |  _| \ \/ / _` | '_ ` _ \| '_ \| |/ _ \/ __|
+        // | |  | | (_) | | |  __/ | |___ >  < (_| | | | | | | |_) | |  __/\__ \
+        // |_|  |_|\___/|_|  \___| |_____/_/\_\__,_|_| |_| |_| .__/|_|\___||___/  
+
+        /*A trader may view the OrderBook at any given time. A trader may also
+        copy the OrderBook. */
+        ArrayList<Order> orderBookCopy = trader.getOrderBookCopy();
+        
+        /*Quantities in orders are automatically rounded to fit the allowed
+        decimal places for any coin.
+        Example: Buying €2.567 defaults to €2.58 because euros.decimals = 2
+        Example: Buying $BTC 2.567 defaults to $BTC 2.56700000 because btc.decimals = 8
+        */
+        try {
+            trader.buy(2.567, btc, euro);
+            orderBook.printOrderBook(); 
+        } catch (Exception e) {};
+
+        /*A Trader must be logged in and approved in order to place orders,
+        otherwise an exception is raised*/
+        try {
+            Trader david = new Trader("david", "david");
+            david.buy(10, doge, dollar);
+            System.out.println("Order confirmed.");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        };
+
+
+        /*An order also keeps track of which traders executed it. */
+        try {
+            Order order = orderBook.getOrder(orderID);
+            ArrayList<Trader> tradersMatched = order.getTradersMatched();
+            ArrayList<Double> tradersMatchedBalance = order.getTradersMatchedBalance();
+
+            for (int i = 0; i < tradersMatched.size(); i++) {
+                System.out.println("Trader " + tradersMatched.get(i).getUsername() +
+                                   " sold " + tradersMatchedBalance.get(i) + " to Trader " + 
+                                   order.getTrader().getUsername());
+            }
+
+        } catch (Exception e) {};
         
         trader.logout();
         admin.logout();
