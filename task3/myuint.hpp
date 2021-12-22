@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
 
 template <char16_t Size> class myuint {
     
@@ -13,7 +14,7 @@ template <char16_t Size> class myuint {
 
 
     public:
-        void* data[2];
+        void* data[2] = {0,0};
 
         myuint(int i = 0) {
             alloc(Size, i);
@@ -116,14 +117,89 @@ template <char16_t Size> class myuint {
             return *this;
         }
 
-        myuint& operator += (const int& num) {                           
+        // myuint& operator += (const int& num) {                           
             
-            uint64_t x;
-            memcpy(&x, data[0], sizeof(uint64_t));
+        //     uint64_t x;
+        //     uint64_t y;
+        //     uint64_t z;
 
-            x += num;
-            memcpy(data[0], &x, Size/8);
 
+        //     memcpy(&x, data[0], sizeof(uint64_t));
+
+        //     z = x;
+        //     x += num;
+
+
+        //     //Overflow
+        //     // if (Size > 64 && num >= 0 && (num >= pow(2,Size)-1 || x < z) {
+                                
+        //     // }
+
+        //     memcpy(data[0], &x, Size/8);
+
+            
+        //     return *this;
+        // }
+
+
+
+        inline bool operator > (const myuint& rhs) {
+            
+            //Attempt to compare most significant bits ie. data[1]
+
+            if (data[1]) {
+                if (rhs.data[1]) {
+                    return data[1] > rhs.data[1];
+                } else return true;
+            } else {
+                if (!rhs.data[1]) {
+                    return data[0] > rhs.data[0];
+                } else return false;
+            }
+            
+        }
+
+        myuint& operator += (const int& num) {                           
+
+            int max = pow(2,Size)-1;    
+
+            if (Size > 128) {
+                // myuint<Size/2> x;
+                // myuint<Size/2> y;
+                // myuint<Size/2> z;
+
+                // memcpy(&x, data[0], Size/2);
+                // memcpy(&y, data[1], Size/2);
+                
+                // x = z;
+                // x += num;
+
+
+                // if (num > 0 && (num >= max || x < z) || (num < 0 && (num <= -max || x > z)))
+                //     y = ((z+num)) >> (Size/2);
+                
+                // memcpy(data[0], &x, Size/2);
+                // memcpy(data[1], &y, Size/2);
+
+            } else {
+                uint64_t x;
+                uint64_t y;
+                uint64_t z;
+
+                memcpy(&x, data[0], Size/2);
+                memcpy(&y, data[1], Size/2);
+
+                x = z;
+                x += num;
+
+                // Overflow or Underflow
+                if (num > 0 && (num >= max || x < z) || (num < 0 && (num <= -max || x > z)))
+                    y = ((uint64_t) (z+num)) >> (Size/2);
+                
+                memcpy(data[0], &x, Size/2);
+                memcpy(data[1], &y, Size/2);
+
+            }
             
             return *this;
         }
@@ -147,7 +223,7 @@ template <char16_t Size> class myuint {
                 std::free(data[1]);
 
             //Create new heap memory.
-            alloc(that.getSize());
+            alloc(Size);
 
             //Make new heap memory of that.
             data[0] = that.data[0];
@@ -157,7 +233,6 @@ template <char16_t Size> class myuint {
             //Return implicit object.
             return *this;
         }
-
 
         //Only works for when data is composed of primitve data types.
         template <typename T> T convert_to() {
@@ -174,8 +249,6 @@ template <char16_t Size> class myuint {
             if (Size > 64 && sizeof(T) > sizeof(data[0])) {
                 memcpy(&y, data[1], sizeof(T));
                 
-                printf("%ld\n",y);
-
                 y <<= sizeof(data[0])*8;
                 x &= y;
             }
@@ -185,6 +258,8 @@ template <char16_t Size> class myuint {
             
         }
 };
+
+
 
 template <>
 inline myuint<128>& myuint<128>::operator = (const myuint<128>& that) {
