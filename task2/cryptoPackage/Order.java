@@ -46,7 +46,6 @@ public class Order {
         return copy;
     }
     protected void addMatchedTrader(Trader trader, double amount) {
-        //TODO: Update addMatchedTrader to also include how much quantity was shaved off by a trader.
         
         //Find if trader is already in list
 

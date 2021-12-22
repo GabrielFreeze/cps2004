@@ -180,6 +180,7 @@ class cryptoPackageLauncher {
         /*A trader may view the OrderBook at any given time. A trader may also
         copy the OrderBook. */
         ArrayList<Order> orderBookCopy = trader.getOrderBookCopy();
+        System.out.println(orderBookCopy);
         
         /*Quantities in orders are automatically rounded to fit the allowed
         decimal places for any coin.
