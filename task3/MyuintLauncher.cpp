@@ -6,16 +6,20 @@ using namespace std;
 
 int main() {
     
-    myuint<128> i(10);
-    myuint<128> j(20); 
+    // uint64_t a = 10;
+    // std::cout << (a >> 1) << std::endl;
+
+
+    myuint<256> i(10);
+    myuint<256> j(20); 
     
-    myuint<128> k(30);
+    myuint<256> k(300);
     
     i = k;
-    i += 10;
-    k -= 1;
+    // i += 10;
+    // k -= 1;
     
-    unsigned short x = k.convert_to<uint16_t>();
-    cout << x << endl;
+    unsigned char x = i.convert_to<uint16_t>();
+    printf("%d\n",x);
     return 0;
 }
