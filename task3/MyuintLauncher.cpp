@@ -21,5 +21,15 @@ int main() {
     
     unsigned char x = i.convert_to<uint16_t>();
     printf("%d\n",x);
+
+
+
+    myuint<8> a(50);
+    a += 300;
+
+    //a should be 94
+    unsigned char y = a.convert_to<uint8_t>();
+    printf("%d\n",y);
+
     return 0;
 }

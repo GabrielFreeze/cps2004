@@ -17,9 +17,9 @@ template <char16_t Size> class myuint {
         myuint(int i = 0) {
 
             static_assert(   Size == 1  || Size == 2   || Size == 4    || Size == 8 || Size == 16
-                  || Size == 16 || Size == 32  || Size == 64   || Size == 128 
-                  || Size == 256|| Size == 512 || Size == 1024 || Size == 2048,
-                  "Size of myuint must be a power of 2 and in the range [1,2048].");
+                          || Size == 16 || Size == 32  || Size == 64   || Size == 128 
+                          || Size == 256|| Size == 512 || Size == 1024 || Size == 2048,
+                          "Size of myuint must be a power of 2 and in the range [1,2048].");
 
             alloc(Size, i);
         }
@@ -97,31 +97,6 @@ template <char16_t Size> class myuint {
             return *this;
         }
 
-        // myuint& operator += (const int& num) {                           
-            
-        //     uint64_t x;
-        //     uint64_t y;
-        //     uint64_t z;
-
-
-        //     memcpy(&x, data[0], sizeof(uint64_t));
-
-        //     z = x;
-        //     x += num;
-
-
-        //     //Overflow
-        //     // if (Size > 64 && num >= 0 && (num >= pow(2,Size)-1 || x < z) {
-                                
-        //     // }
-
-        //     memcpy(data[0], &x, Size/8);
-
-            
-        //     return *this;
-        // }
-
-
 
         inline bool operator > (const myuint& rhs) {
             
@@ -162,24 +137,30 @@ template <char16_t Size> class myuint {
                 // memcpy(data[1], &y, Size/2);
 
             } else { //TODO: FIX THIS!
-                std::cout << num << std::endl;
-                uint64_t x;
-                uint64_t y;
-                uint64_t z;
+            
+                uint64_t x = 0;
+                uint64_t y = 0;
+                uint64_t z = 0;
 
-                memcpy(&x, data[0], Size/2);
-                memcpy(&y, data[1], Size/2);
+                if (data[0])
+                    memcpy(&x, data[0], Size/2);
+
+                if (Size > 64 && data[1])
+                    memcpy(&y, data[1], Size/2);
 
                 z = x;
                 x += num;
 
-                // Overflow or Underflow
-                if (num > 0 && (num >= max || x < z) || (num < 0 && (num <= -max || x > z)))
-                    y = ((uint64_t) (z+num)) >> (Size/2);
+                //Any under/overflows are allowed to happen.
+
+                //Overflow or Underflow
+                if (Size > 64 && (num > 0 && (num >= max || x < z) || (num < 0 && (num <= -max || x > z)))) {
+                        y += x >> (Size/2);
+                        memcpy(data[1], &y, Size/2);
+                    }
 
                 
                 memcpy(data[0], &x, Size/2);
-                memcpy(data[1], &y, Size/2);
 
             }
             
