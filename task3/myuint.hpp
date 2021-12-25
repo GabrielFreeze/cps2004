@@ -15,11 +15,10 @@ template <char16_t Size> class myuint {
         void* data[2] = {nullptr,nullptr};
 
         myuint(int i = 0) {
-
-            static_assert(   Size == 1  || Size == 2   || Size == 4    || Size == 8 || Size == 16
-                          || Size == 16 || Size == 32  || Size == 64   || Size == 128 
-                          || Size == 256|| Size == 512 || Size == 1024 || Size == 2048,
-                          "Size of myuint must be a power of 2 and in the range [1,2048].");
+            // static_assert(   Size == 1  || Size == 2   || Size == 4    || Size == 8 || Size == 16
+            //               || Size == 16 || Size == 32  || Size == 64   || Size == 128 
+            //               || Size == 256|| Size == 512 || Size == 1024 || Size == 2048,
+            //               "Size of myuint must be a power of 2 and in the range [1,2048].");
 
             alloc(Size, i);
         }
@@ -266,7 +265,7 @@ template <char16_t Size> class myuint {
         inline myuint& operator << (const int64_t& num) {
 
             //No need to catch the lost bits by performing LHS.    
-            lsh(num);
+            this->lsh(num);
 
             //Return self for operator chaining.
             return *this;
@@ -629,9 +628,12 @@ template <char16_t Size> class myuint {
         }
 
  
-    private:
-    //TODO: MAKE THIS WORK FRIEND CLASS AND STUFF
+    
+    //TODO: MAKE THIS WORK +  FRIEND CLASS AND STUFF
+    //Probably make it accept 2 arguments għadd-dritt
+    
         uint64_t lsh(const uint64_t& num) {
+            
             uint64_t bits_lost_a;
             uint64_t bits_lost_b;
             
@@ -652,6 +654,13 @@ template <char16_t Size> class myuint {
                 //Add a's lost bits into b.
                 *b |= bits_lost_a;
 
+
+                data[0] = reinterpret_cast<void*>(a);
+                data[1] = reinterpret_cast<void*>(b);
+
+
+
+
                 //Return b's lost bits.
                 return bits_lost_b;    
 
@@ -671,6 +680,7 @@ template <char16_t Size> class myuint {
                     //Perform leftshit
                     a <<= num;
 
+                    memcpy(data[0], &a, Size/16);
                 }
                 if (Size > 64 && data[1]) {
                     memcpy(&b, data[1], Size/16);
@@ -684,6 +694,8 @@ template <char16_t Size> class myuint {
                     //Add a's lost bits into new space created by b's bitshift.
                     b |= bits_lost_a; 
                     
+                    memcpy(data[0], &b, Size/16);
+
                     //Return b's lost bits to be used in the next bit block.
                     return bits_lost_b;
                 }
