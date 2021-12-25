@@ -7,9 +7,11 @@
 #include <cstdlib>
 #include <iostream>
 
+
 template <char16_t Size> class myuint {
       
     public:
+        template <char16_t Size_> friend std::ostream& operator << (std::ostream& os, const myuint<Size_>& obj);
         void* data[2] = {nullptr,nullptr};
 
         myuint(int i = 0) {
@@ -135,18 +137,12 @@ template <char16_t Size> class myuint {
                     data[1] = new myuint<1024>(0); //Assume that i can only be 64 bits maximum, so data[1] will be
                     break;
             } 
-        
-
-
         }
-
 
         myuint& operator -= (const int& num) {
             *this += -num;
             return *this;
         }
-
-
 
         myuint& operator += (const int& num) {                           
             
@@ -155,7 +151,7 @@ template <char16_t Size> class myuint {
             //TODO: Implement bitshifting for muint 
 
 
-            int max = pow(2,Size)-1;    
+            int max = (int) pow(2,Size)-1;    
 
             if (Size > 128) {
             //     myuint<Size/2>* x;
@@ -197,7 +193,7 @@ template <char16_t Size> class myuint {
                 //Any under/overflows are allowed to happen.
 
                 //Checks wether an under/overflow occurred in data[1] and wether to act upon it (update data[1]) or not.
-                if (Size > 64 && data[1] && (num > 0 && (num >= max || x < z) || (num < 0 && (num <= -max || x > z)))) {
+                if (Size > 64 && data[1] && ((num > 0 && (num >= max || x < z)) || (num < 0 && (num <= -max || x > z)))) {
                         y += x >> (Size/2);
                         memcpy(data[1], &y, Size/2);
                 }
@@ -216,6 +212,9 @@ template <char16_t Size> class myuint {
             return lhs;
         }
 
+        inline myuint& operator = (const int& rhs) {
+            return *this = myuint<Size>(rhs);
+        }
         inline myuint& operator = (const myuint& that) {
             //Ensure object is not self.
             if (this == &that)
@@ -245,7 +244,6 @@ template <char16_t Size> class myuint {
                     *x = *y; //Recursive Call
                     data[1] = reinterpret_cast<void*>(x);
                 }
-                return *this;        
             } else {
                 if (data[0] && that.data[0]) {
                     memcpy(data[0], that.data[0], Size/16);
@@ -255,43 +253,180 @@ template <char16_t Size> class myuint {
                     memcpy(data[1], that.data[1], Size/16);
                 }
 
-                return *this;
             }
             
             //Return implicit object.
-            // return *this;
+            return *this; 
+        }
+
+        inline myuint& operator <<= (const int64_t& num) {
+            *this = *this << num;
+            return *this;
+        }
+        inline myuint& operator << (const int64_t& num) {
+
+            //No need to catch the lost bits by performing LHS.    
+            lsh(num);
+
+            //Return self for operator chaining.
+            return *this;
         }
 
 
-        inline bool operator == (const int& rhs) {
-            
+        inline myuint& operator ~ () {
             if (Size > 128) {
-                assert(data[0] != nullptr || data[1] != nullptr);
-                
-                myuint<Size/2>* x = reinterpret_cast<myuint<Size/2>*>(data[0]);
-                myuint<Size/2>* y = reinterpret_cast<myuint<Size/2>*>(data[1]);
+                assert(data[0] != nullptr && data[1] != nullptr);
 
-                return *y == 0? true : *x == rhs; //Recursive call
+                myuint<Size/2>* a = reinterpret_cast<myuint<Size/2>*>(data[0]);
+                myuint<Size/2>* b = reinterpret_cast<myuint<Size/2>*>(data[1]);
+
+                *a = ~(*a);
+                *b = ~(*b);
 
             } else {
+                uint64_t a = 0;
+                uint64_t b = 0;
+                uint16_t c = 0;
 
+
+                if (data[0]) {
+                    memcpy(&a, data[0], Size/16);
+                    a = ~a;
+                    memcpy(data[0], &a, Size/16);
+                    memcpy(&c, data[0], 2);
+
+                }
+                if (Size > 64 && data[1]) {
+                    memcpy(&b, data[1], Size/16);
+                    b = ~b;
+                    memcpy(data[1], &b, Size/16);
+                }
+
+            }
+            
+            return *this;
+        }
+
+
+        inline myuint& operator &= (const uint64_t& rhs) {
+            return *this &= myuint<Size>(rhs);
+        }
+        inline myuint& operator &= (const myuint& rhs) {
+            *this = *this & rhs;
+            return *this;
+        }
+        inline myuint& operator & (const uint64_t& rhs) {
+            return *this & myuint<Size>(rhs);
+        }
+        inline myuint& operator & (const myuint& rhs) {
+            if (Size > 128) {
+                assert(data[0] != nullptr && data[1] != nullptr);
+                assert(rhs.data[0] != nullptr && rhs.data[1] != nullptr);
+
+                myuint<Size/2>* a = reinterpret_cast<myuint<Size/2>*>(data[0]);
+                myuint<Size/2>* b = reinterpret_cast<myuint<Size/2>*>(data[1]);
+                myuint<Size/2>* x = reinterpret_cast<myuint<Size/2>*>(rhs.data[0]);
+                myuint<Size/2>* y = reinterpret_cast<myuint<Size/2>*>(rhs.data[1]);
+
+                *a &= *x;
+                *b &= *y;
+            } else {
+                uint64_t a = 0;
+                uint64_t b = 0;
+                
                 uint64_t x = 0;
                 uint64_t y = 0;
 
-                if (data[0])
-                    memcpy(&x, data[0], Size/2);
-                
-                if (Size > 64 && data[1])
-                    memcpy(&y, data[1], Size/2);
-                
-                
-                return y? true : x == rhs; //Base Case
-                    
+                if (data[0] && rhs.data[0]) {
+                    memcpy(&a, data[0], Size/16);
+                    memcpy(&x, rhs.data[0], Size/16);
+
+                    a &= x;
+
+                    memcpy(data[0], &a, Size/16);
+                    memcpy(rhs.data[0], &x, Size/16);
+                }
+                if (Size > 64 && data[1] && rhs.data[1]) {
+                    memcpy(&b, data[1], Size/16);
+                    memcpy(&y, rhs.data[1], Size/16);
+
+                    b &= y;
+
+                    memcpy(data[1], &b, Size/16);
+                    memcpy(rhs.data[1], &y, Size/16);
+
+                }
+
             }
             
+            return *this;
         }
 
-        inline bool operator == (const myuint& rhs) const{
+        
+        inline myuint& operator |= (const uint64_t& rhs) {
+            return *this |= myuint<Size>(rhs);
+        }
+        inline myuint& operator |= (const myuint& rhs) {
+            *this = *this | rhs;
+            return *this;
+        }
+        inline myuint& operator | (const uint64_t& rhs) {
+            return *this | myuint<Size>(rhs);
+        }
+        inline myuint& operator | (const myuint& rhs) {
+            if (Size > 128) {
+                assert(data[0] != nullptr && data[1] != nullptr);
+                assert(rhs.data[0] != nullptr && rhs.data[1] != nullptr);
+
+                myuint<Size/2>* a = reinterpret_cast<myuint<Size/2>*>(data[0]);
+                myuint<Size/2>* b = reinterpret_cast<myuint<Size/2>*>(data[1]);
+                myuint<Size/2>* x = reinterpret_cast<myuint<Size/2>*>(rhs.data[0]);
+                myuint<Size/2>* y = reinterpret_cast<myuint<Size/2>*>(rhs.data[1]);
+
+                *a |= *x;
+                *b |= *y;
+            } else {
+                uint64_t a = 0;
+                uint64_t b = 0;
+                
+                uint64_t x = 0;
+                uint64_t y = 0;
+
+                if (data[0] && rhs.data[0]) {
+                    memcpy(&a, data[0], Size/16);
+                    memcpy(&x, rhs.data[0], Size/16);
+
+                    a |= x;
+
+                    memcpy(data[0], &a, Size/16);
+                    memcpy(rhs.data[0], &x, Size/16);
+                }
+                if (Size > 64 && data[1] && rhs.data[1]) {
+                    memcpy(&b, data[1], Size/16);
+                    memcpy(&y, rhs.data[1], Size/16);
+
+                    b |= y;
+
+                    memcpy(data[1], &b, Size/16);
+                    memcpy(rhs.data[1], &y, Size/16);
+
+                }
+
+            }
+            
+            return *this;
+        }
+
+        inline bool operator != (const int& rhs) {
+            return !(*this == myuint<Size>(rhs));
+        }
+        inline bool operator != (const myuint& rhs) {
+            return !(*this == rhs);
+        }
+        inline bool operator == (const int& rhs) {
+            return *this == myuint<Size>(rhs);
+        }
+        inline bool operator == (const myuint& rhs){
             if (Size > 128) {
 
                 assert(data[0] != nullptr && data[1] != nullptr);
@@ -320,20 +455,28 @@ template <char16_t Size> class myuint {
                 uint64_t y = 0;
 
                 if (data[0])
-                    memcpy(&a, data[0], Size/2);
+                    memcpy(&a, data[0], Size/16);
                 if (data[1])
-                    memcpy(&b, data[1], Size/2);
+                    memcpy(&b, data[1], Size/16);
 
                 if (rhs.data[0])
-                    memcpy(&x, rhs.data[0], Size/2);
+                    memcpy(&x, rhs.data[0], Size/16);
                 if (rhs.data[1])
-                    memcpy(&y, rhs.data[1], Size/2);
+                    memcpy(&y, rhs.data[1], Size/16);
 
                 return a==x && b==y; //Base call.
             }
         }
         
-
+        inline bool operator >= (const myuint& rhs) {
+            return (*this == rhs) || (*this > rhs);
+        }
+        inline bool operator >= (const int& rhs) {
+            return *this >= myuint<Size>(rhs);
+        }
+        inline bool operator > (const int& rhs) {
+            return *this > myuint<Size>(rhs);
+        }
         inline bool operator > (const myuint& rhs) {
             
             //Attempt to compare most significant bits ie. data[1]
@@ -343,25 +486,16 @@ template <char16_t Size> class myuint {
                 assert(data[0] != nullptr && data[1] != nullptr);
                 assert(rhs.data[0] != nullptr && rhs.data[1] != nullptr);
 
-                myuint<Size/2>* a;
-                myuint<Size/2>* b;
-
-                myuint<Size/2>* x;
-                myuint<Size/2>* y;
-
-                a = reinterpret_cast<myuint<Size/2>*>(data[0]);
-                b = reinterpret_cast<myuint<Size/2>*>(data[1]);
-
-                x = reinterpret_cast<myuint<Size/2>*>(rhs.data[0]);
-                y = reinterpret_cast<myuint<Size/2>*>(rhs.data[1]);
+                myuint<Size/2>* a = reinterpret_cast<myuint<Size/2>*>(data[0]);
+                myuint<Size/2>* b = reinterpret_cast<myuint<Size/2>*>(data[1]);
+                myuint<Size/2>* x = reinterpret_cast<myuint<Size/2>*>(rhs.data[0]);
+                myuint<Size/2>* y = reinterpret_cast<myuint<Size/2>*>(rhs.data[1]);
 
 
-                if (*b == 0) {
-                    if (*y == 0) return *b > *y;    
-                    else    return true;
-                    // return *y? *b > *y : true;
+                if (*b) {
+                    return *y? *b > *y : true;
                 } else {
-                    return *y == 0? false : *a > *x;
+                    return *y? false : *a > *x;
                 }   
 
             } else {
@@ -372,14 +506,14 @@ template <char16_t Size> class myuint {
                 uint64_t y = 0;
 
                 if (data[0])
-                    memcpy(&a, data[0], Size/2);
-                if (data[1])
-                    memcpy(&b, data[1], Size/2);
+                    memcpy(&a, data[0], Size/16);
+                if (Size > 64 && data[1])
+                    memcpy(&b, data[1], Size/16);
 
                 if (rhs.data[0])
-                    memcpy(&x, rhs.data[0], Size/2);
-                if (rhs.data[1])
-                    memcpy(&y, rhs.data[1], Size/2);
+                    memcpy(&x, rhs.data[0], Size/16);
+                if (Size > 64 && rhs.data[1])
+                    memcpy(&y, rhs.data[1], Size/16);
 
                 if (b) {
                     return y? b > y : true;
@@ -390,6 +524,15 @@ template <char16_t Size> class myuint {
 
         }
 
+        inline bool operator <= (const myuint& rhs) {
+            return (*this == rhs) || (*this < rhs);
+        }
+        inline bool operator <= (const int& rhs) {
+            return *this <= myuint<Size>(rhs);
+        }
+        inline bool operator < (const int& rhs) {
+            return *this < myuint<Size>(rhs);
+        }
         inline bool operator < (const myuint& rhs) {
             
             //Attempt to compare most significant bits ie. data[1]
@@ -398,23 +541,16 @@ template <char16_t Size> class myuint {
                 assert(data[0] != nullptr && data[1] != nullptr);
                 assert(rhs.data[0] != nullptr && rhs.data[1] != nullptr);
 
-                myuint<Size/2>* a = nullptr;
-                myuint<Size/2>* b = nullptr;
-
-                myuint<Size/2>* x = nullptr;
-                myuint<Size/2>* y = nullptr;
-
-                a = reinterpret_cast<myuint<Size/2>*>(data[0]);
-                b = reinterpret_cast<myuint<Size/2>*>(data[1]);
-
-                x = reinterpret_cast<myuint<Size/2>*>(rhs.data[0]);
-                y = reinterpret_cast<myuint<Size/2>*>(rhs.data[1]);
+                myuint<Size/2>* a = reinterpret_cast<myuint<Size/2>*>(data[0]);
+                myuint<Size/2>* b = reinterpret_cast<myuint<Size/2>*>(data[1]); 
+                myuint<Size/2>* x = reinterpret_cast<myuint<Size/2>*>(rhs.data[0]);
+                myuint<Size/2>* y = reinterpret_cast<myuint<Size/2>*>(rhs.data[1]);
 
 
-                if (*b == 0) {
+                if (*b) {
                     return *y == 0? *b < *y : false;
                 } else {
-                    return *y == 0? true : *a < *x;
+                    return *y? true : *a < *x;
                 }   
 
             } else {
@@ -425,14 +561,14 @@ template <char16_t Size> class myuint {
                 uint64_t y = 0;
 
                 if (data[0])
-                    memcpy(&a, data[0], Size/2);
+                    memcpy(&a, data[0], Size/16);
                 if (Size > 64 && data[1])
-                    memcpy(&b, data[1], Size/2);
+                    memcpy(&b, data[1], Size/16);
 
                 if (rhs.data[0])
-                    memcpy(&x, rhs.data[0], Size/2);
+                    memcpy(&x, rhs.data[0], Size/16);
                 if (Size > 64 && rhs.data[1])
-                    memcpy(&y, rhs.data[1], Size/2);
+                    memcpy(&y, rhs.data[1], Size/16);
 
                 if (b) {
                     return y? b < y : false;
@@ -442,16 +578,18 @@ template <char16_t Size> class myuint {
             }
         }
 
-        explicit inline operator bool() const {
-            return this->operator==(0);
+        constexpr explicit inline operator bool() {
+            if constexpr (Size != 0)
+                return !this->operator==(0);
+            return false;
         }
 
         template <typename T> T convert_to() {
             
             //The mask represents the number of bytes to extract.
-            int mask = (int) pow(2, sizeof(T)*8)-1;
-            T x;
-            T y;
+            T x = 0;
+            T y = 0;
+            size_t size = sizeof(T)>=Size/16? Size/16:sizeof(T);
 
             if (Size > 128) { //Recursive Definition
 
@@ -467,31 +605,99 @@ template <char16_t Size> class myuint {
                 y = b->template convert_to<T>();
                 
 
-                y <<= a->getSize();
+                y <<= size*8;
                 x |= y;
                 
 
             } else { //Base Case (Size == 1 | 2 | 4 | 8 | 16 | 32 | 64)
-                memcpy(&x, data[0], sizeof(T));
+
+                if (data[0]) {
+                    memcpy(&x, data[0], size);
+                }
                 
                 //If there's more data to add and there is space left to add some or all of it in T.
-                if (Size > 64 && sizeof(T) > sizeof(data[0])) {
-                    memcpy(&y, data[1], sizeof(T));
+                if (Size > 64 && data[1] && sizeof(T) > sizeof(data[0])) {
+                    memcpy(&y, data[1], size);
                     
-                    y <<= Size/2; 
+                    y <<= size*8; 
                     x |= y; 
                 }
 
             }
-            int z = x & mask;
-            return z;
+            return x;
             
         }
+
+ 
+    private:
+    //TODO: MAKE THIS WORK FRIEND CLASS AND STUFF
+        uint64_t lsh(const uint64_t& num) {
+            uint64_t bits_lost_a;
+            uint64_t bits_lost_b;
+            
+            
+            if (Size > 128) {
+                assert(data[0] != nullptr);
+                assert(data[1] != nullptr);
+
+                myuint<Size/2>* a = reinterpret_cast<myuint<Size/2>*>(data[0]);
+                myuint<Size/2>* b = reinterpret_cast<myuint<Size/2>*>(data[1]);
+                
+                //LSH a by num and get the bits lost.
+                bits_lost_a = a->lsh(num);
+
+                //LSH b by num and get the bits lost.
+                bits_lost_b = b->lsh(num);
+
+                //Add a's lost bits into b.
+                *b |= bits_lost_a;
+
+                //Return b's lost bits.
+                return bits_lost_b;    
+
+
+            } else {
+                uint64_t a = 0;
+                uint64_t b = 0;
+
+                uint64_t mask = ~ (int) (pow(2,Size-num)-1);
+
+                if (data[0]) {
+                    memcpy(&a, data[0], Size/16);
+                    
+                    //Get bits lost after left bitshit by num
+                    bits_lost_a = (a & mask) >> (Size-num);
+
+                    //Perform leftshit
+                    a <<= num;
+
+                }
+                if (Size > 64 && data[1]) {
+                    memcpy(&b, data[1], Size/16);
+
+                    //Get bits lost after left bitshift by num
+                    bits_lost_b = (b & mask) >> (Size-num);
+
+                    //Perform leftshift
+                    b <<= num;
+
+                    //Add a's lost bits into new space created by b's bitshift.
+                    b |= bits_lost_a; 
+                    
+                    //Return b's lost bits to be used in the next bit block.
+                    return bits_lost_b;
+                }
+
+                //Return a's lost bits to be used in the next bit block.
+                return bits_lost_a;
+                
+            }
+        }
+
 };
 
+template<char16_t Size> std::ostream& operator << (std::ostream& os, const myuint<Size>& obj) {
 
-
-/*
-TODO: Try switching back to malloc/free
-Try and create a destructor using malloc/free
-Try and fix assignment operator*/
+    os << "!";
+    return os;
+}
