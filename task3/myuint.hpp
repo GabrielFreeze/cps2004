@@ -41,7 +41,7 @@ template <char16_t Size> class myuint {
                 }
                 
 
-            }else {
+            } else {
                 switch (Size) {
                     case 1: case 2: case 4: case 8: {
                         if (data[0]) {
@@ -49,28 +49,28 @@ template <char16_t Size> class myuint {
                             delete x;
                             data[0] = nullptr;
                         }
-                    }
+                    } break;
                     case 16: {
                         if (data[0]) {
                             uint16_t* x = reinterpret_cast<uint16_t*>(data[0]);
                             delete x;
                             data[0] = nullptr;
                         }
-                    }
+                    } break;
                     case 32: {
                         if (data[0]) {
                             uint32_t* x = reinterpret_cast<uint32_t*>(data[0]);
                             delete x;
                             data[0] = nullptr;
                         }
-                    }
+                    } break;
                     case 64: {
                         if (data[0]) {
                             uint64_t* x = reinterpret_cast<uint64_t*>(data[0]);
                             delete x;
                             data[0] = nullptr;
                         }
-                    }
+                    } break;
                     case 128: {
                         if (data[0]) {
                             uint64_t* x = reinterpret_cast<uint64_t*>(data[0]);
@@ -98,46 +98,69 @@ template <char16_t Size> class myuint {
         void alloc(char16_t size, uint64_t i = 0) {
 
             switch (size) {
-                case 1:case 2:case 4: case 8:
-                    data[0] = new uint8_t(i);
+                case 1:case 2:case 4: case 8: {
+                    if (!data[0])
+                        data[0] = new uint8_t(i);
                     break;
+                }
                 
-                case 16:   
-                    data[0] = new uint16_t(i);
+                case 16: {
+                    if (!data[0])
+                        data[0] = new uint16_t(i);
                     break;
+                }   
                 
-                case 32:   
-                    data[0] = new uint32_t(i);
+                case 32: {
+                    if (!data[0])
+                        data[0] = new uint32_t(i);
                     break;
+                }
                 
-                case 64:   
-                    data[0] = new uint64_t(i);
+                case 64: {
+                    if (!data[0])
+                        data[0] = new uint64_t(i);
                     break;
+                } 
                 
-                case 128:  
-                    data[0] = new uint64_t(i);
-                    data[1] = new uint64_t(0); //Assume that i can only be 64 bits maximum, so data[1] will be
+                case 128: {
+                    if (!data[0])
+                        data[0] = new uint64_t(i);
+                    if (!data[1])
+                        data[1] = new uint64_t(0); //Assume that i can only be 64 bits maximum, so data[1] will be
                     break;
+                }
                 
-                case 256:  
-                    data[0] = new myuint<128>(i);
-                    data[1] = new myuint<128>(0); //Assume that i can only be 64 bits maximum, so data[1] will be
+                case 256: {
+                    if (!data[0])
+                        data[0] = new myuint<128>(i);
+                    if (!data[1])
+                        data[1] = new myuint<128>(0); //Assume that i can only be 64 bits maximum, so data[1] will be
                     break;
+                }
 
-                case 512:  
-                    data[0] = new myuint<256>(i);
-                    data[1] = new myuint<256>(0); //Assume that i can only be 64 bits maximum, so data[1] will be
+                case 512: {
+                    if (!data[0])
+                        data[0] = new myuint<256>(i);
+                    if (!data[1])
+                        data[1] = new myuint<256>(0); //Assume that i can only be 64 bits maximum, so data[1] will be
                     break;
+                }
 
-                case 1024: 
-                    data[0] = new myuint<512>(i); 
-                    data[1] = new myuint<512>(0); //Assume that i can only be 64 bits maximum, so data[1] will be
+                case 1024: {
+                    if (!data[0])
+                        data[0] = new myuint<512>(i); 
+                    if (!data[1])
+                        data[1] = new myuint<512>(0); //Assume that i can only be 64 bits maximum, so data[1] will be
                     break;
+                }
                            
-                case 2048: 
-                    data[0] = new myuint<1024>(i);
-                    data[1] = new myuint<1024>(0); //Assume that i can only be 64 bits maximum, so data[1] will be
+                case 2048: {
+                    if (!data[0])
+                        data[0] = new myuint<1024>(i);
+                    if (!data[1])
+                        data[1] = new myuint<1024>(0); //Assume that i can only be 64 bits maximum, so data[1] will be
                     break;
+                }
             } 
         }
 
@@ -244,7 +267,7 @@ template <char16_t Size> class myuint {
             if ((myuint<U>*)this == &that)
                 return *this;
 
-
+            //TODO: CHECK WHERE THE VALGRIND ERROR IS HAPPENING
             //Free all allocated memory but won't destruct the object.
             clear();
 
@@ -278,8 +301,17 @@ template <char16_t Size> class myuint {
                         memcpy(&y_buf, that.data[0], U/8);
                         myuint<64> y(y_buf);
 
-                        *x = y;
+                        // if (Size/4 != 64)
+                            *x = y; //in the equal operator for same size, *x has data[0] as null.
+
+                        
+
                         data[0] = reinterpret_cast<void*>(x);
+                        
+                        // myuint<Size/2>* r = reinterpret_cast<myuint<Size/2>*>(data[0]);
+                        // uint64_t t = 0;
+                        // memcpy(&t, r->data[0], 8);
+                        // t += 0;
                     }
                     if (U > 64 && data[1] && that.data[1]) {
                         myuint<Size/2>* a = reinterpret_cast<myuint<Size/2>*>(data[1]);
@@ -348,6 +380,7 @@ template <char16_t Size> class myuint {
         }
         //COPY ASSIGNMENT
         inline myuint& operator = (const myuint& that) {
+            
             //Ensure object is not self.
             if (this == &that)
                 return *this;
@@ -379,9 +412,6 @@ template <char16_t Size> class myuint {
             } else {
                 if (data[0] && that.data[0]) {
                     memcpy(data[0], that.data[0], Size/16);
-                    uint64_t aas = 0;
-                    memcpy(&aas, data[0], Size/16);
-                    std::cout << aas << std::endl;
                 }
                 if (Size > 64 && data[1] && that.data[1]) {
                     memcpy(data[1], that.data[1], Size/16);
@@ -391,8 +421,7 @@ template <char16_t Size> class myuint {
             
             //Return implicit object.
             return *this; 
-        }
-        
+        }     
 
         friend myuint operator ^ (myuint<Size> lhs, const int64_t& rhs) {
             return lhs ^ myuint<Size>(rhs);
