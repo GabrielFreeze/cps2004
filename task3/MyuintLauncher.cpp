@@ -39,10 +39,10 @@ int main() {
     
 
     
-    myuint<128> i(10);
-    myuint<16> a(5);
+    myuint<2> i(27);
+    myuint<128> a(5);
     // myuint<16> b(5);
-    i = a;
+    // i = a;
     unsigned short x = i.convert_to<uint16_t>();
     printf("%d\n",x); //i = 5?
 

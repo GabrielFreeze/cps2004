@@ -262,98 +262,38 @@ template <char16_t Size> class myuint {
         }
         //COPY ASSIGNMENT Template
         template <char16_t U>
-        inline myuint<Size>& operator = (const myuint<U>& that) {
+        constexpr inline myuint<Size>& operator = (const myuint<U>& that) {
             //Ensure object is not self.
             if ((myuint<U>*)this == &that) //TODO: See if you have to change this if function because of references and memlocs.
                 return *this;
 
-            //TODO: CHECK WHERE THE VALGRIND ERROR IS HAPPENING
-            //Free all allocated memory but won't destruct the object.
-            clear();
+            if (*this != 0)
+                *this = 0;
 
-            //Create new heap memory.
-            alloc(Size);
-            
-
-            //Copy objects from that into this.
-            if (Size > 128 && U > 128) {
+            if constexpr (Size > U) {
                 if (data[0] && that.data[0]) {
-                    myuint<Size/2>* x = reinterpret_cast<myuint<Size/2>*>(data[0]);
-                    myuint<U/2>* y = reinterpret_cast<myuint<U/2>*>(that.data[0]);
                     
-                    *x = *y; //Recursive Call
-                    data[0] = reinterpret_cast<void*>(x);
-
-                }
-                if (data[1] && that.data[1]) { 
-                    myuint<Size/2>* x = reinterpret_cast<myuint<Size/2>*>(data[1]);
-                    myuint<U/2>* y = reinterpret_cast<myuint<U/2>*>(that.data[1]);
-
-                    *x = *y; //Recursive Call
-                    data[1] = reinterpret_cast<void*>(x);
-                }
-            } else {
-
-                if (Size > U) {
-                    if (data[0] && that.data[0]) {
+                    if (Size > 128) {
                         myuint<Size/2>* x = reinterpret_cast<myuint<Size/2>*>(data[0]);
-                        
-                        uint64_t y_buf = 0;
-                        memcpy(&y_buf, that.data[0], U/8);
-                        myuint<64> y(y_buf);
-
-                        // if (Size/4 != 64)
-                        *x = y; //in the equal operator for same size, *x has data[0] as null.
-                        
-                        
-
+                        *x = that;
                         data[0] = reinterpret_cast<void*>(x);
-                        
-                        // myuint<Size/2>* r = reinterpret_cast<myuint<Size/2>*>(data[0]);
-                        // uint64_t t = 0;
-                        // memcpy(&t, r->data[0], 8);
-                        // t += 0;
-                    }
-                    if (U > 64 && data[1] && that.data[1]) {
-                        myuint<Size/2>* a = reinterpret_cast<myuint<Size/2>*>(data[1]);
-
-                        uint64_t b_buf = 0;
-                        memcpy(&b_buf, that.data[1], U/8);
-                        myuint<64> b(b_buf);
-
-                        *a = b;
-                        data[1] = reinterpret_cast<void*>(a);
+                    } else {
+                        memcpy(data[0], that.data[0], U/8);
                     }
                 }
-
-                if (U > Size) {
-                    if (data[0] && that.data[0]) {
-                        myuint<U/2>* x = reinterpret_cast<myuint<U/2>*>(that.data[0]);
-
-                        uint64_t y_buf = 0;
-                        memcpy(&y_buf, data[0], Size/8);
-                        myuint<64> y(y_buf);
-
-                        y = *x;
-                        data[0] = reinterpret_cast<void*>(&y);
-
-                    }
-                    if (Size > 64 && data[1] && that.data[1]) {
-                        myuint<U/2>* a = reinterpret_cast<myuint<U/2>*>(that.data[1]);
-
-                        uint64_t b_buf = 0;
-                        memcpy(&b_buf, data[1], Size/8);
-                        myuint<64> b(b_buf);
-
-                        b = *a;
-                        data[1] = reinterpret_cast<void*>(&b);
-
-                    }
-                }
-
-                //if (Size == U) jump to template specialised copy assignment function
             }
-            
+
+            if constexpr (U > Size) {
+                if (data[0] && that.data[0]) {
+                    if (U > 128) {
+                        myuint<U/2>* x = reinterpret_cast<myuint<U/2>*>(that.data[0]);
+                        *this = *x;
+                    } else {
+                        memcpy(data[0], that.data[0], Size/8);
+                    }
+                }
+            }
+
             //Return implicit object.
             return *this; 
         }
@@ -769,13 +709,12 @@ template <char16_t Size> class myuint {
 
         template <typename T> T convert_to() {
             
-            //The mask represents the number of bytes to extract.
             T x = 0;
             T y = 0;
-            size_t size = sizeof(T)>=Size/16? Size/16:sizeof(T);
 
             if (Size > 128) { //Recursive Definition
 
+                size_t size = sizeof(T)>=Size/16? Size/16:sizeof(T);
                 assert(data[0] != nullptr && data[1] != nullptr);
 
                 myuint<Size/2>* a = nullptr;
@@ -795,18 +734,29 @@ template <char16_t Size> class myuint {
             } else { //Base Case (Size == 1 | 2 | 4 | 8 | 16 | 32 | 64)
 
                 if (data[0]) {
-                    memcpy(&x, data[0], size);
+                    if (Size < 8) {
+                        memcpy(&x, data[0], 1);
+                        
+                        //Only leave first Size bits in x.
+                        uint8_t mask = pow(2,Size)-1;
+                        x &= mask;
+                    }
+                    else {
+                        memcpy(&x, data[0], Size/8);
+                    }
                 }
                 
                 //If there's more data to add and there is space left to add some or all of it in T.
                 if (Size > 64 && data[1] && sizeof(T) > sizeof(data[0])) {
-                    memcpy(&y, data[1], size);
+                    memcpy(&y, data[1], Size/8);
                     
-                    y <<= size*8; 
+                    y <<= Size; 
                     x |= y; 
                 }
 
             }
+
+            
             return x;
             
         }
