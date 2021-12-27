@@ -8,42 +8,42 @@ int main() {
     
     //Consider the following numbers.
 
-    myuint<256> i(10);
-    myuint<256> j(20); 
-    myuint<256> k(300);
-    myuint<256> l(0);    
+    myuint<64> j(20); 
+    myuint<64> k(300);
+    myuint<64> l(0);    
 
 
-    //i has now the value of k.
-    i = k; //i is set to 300
+    // //i has now the value of k.
+    // i = k; //i is set to 300
 
-    unsigned short x = i.convert_to<uint16_t>();
-    printf("%d\n",x); //x = 44
+    // unsigned short x = i.convert_to<uint16_t>();
+    // printf("%d\n",x); //x = 44
 
-    //Changing k will not change i.
-    k = l;
-    x = i.convert_to<uint16_t>();
-    printf("%d\n",x);
-    // std::cout << i;
-    //TODO: add i
+    // //Changing k will not change i.
+    // k = l;
+    // x = i.convert_to<uint16_t>();
+    // printf("%d\n",x);
+    // // std::cout << i;
+    // //TODO: add i
     
-    //Comparism between myuint
-    if (j > i)
-        std::cout << "j is greater than i" << std::endl;
-    else 
-        std::cout << "i is greater than j" << std::endl;
+    // //Comparism between myuint
+    // if (j > i)
+    //     std::cout << "j is greater than i" << std::endl;
+    // else 
+    //     std::cout << "i is greater than j" << std::endl;
 
-    if (i == 300) std::cout << "i == 300" << std::endl;
-    if (i != 300) std::cout << "i != 300" << std::endl;
-    if (i == 256) std::cout << "i == 256" << std::endl;
+    // if (i == 300) std::cout << "i == 300" << std::endl;
+    // if (i != 300) std::cout << "i != 300" << std::endl;
+    // if (i == 256) std::cout << "i == 256" << std::endl;
 
-    i = 10;
+    
 
-    i = 10;
+    
+    myuint<128> i(10);
     myuint<16> a(5);
-
+    // myuint<16> b(5);
     i = a;
-    x = i.convert_to<uint16_t>();
+    unsigned short x = i.convert_to<uint16_t>();
     printf("%d\n",x); //i = 5?
 
 
