@@ -278,7 +278,12 @@ template <char16_t Size> class myuint {
                         *x = that;
                         data[0] = reinterpret_cast<void*>(x);
                     } else {
-                        memcpy(data[0], that.data[0], U/8);
+                        uint64_t x;
+                        memcpy(&x, that.data[0], U<8? 1:U/8);
+
+                        uint8_t mask = pow(2,U)-1;
+                        x &= mask;
+                        memcpy(data[0], &x, U<8? 1:U/8);
                     }
                 }
             }
@@ -289,7 +294,13 @@ template <char16_t Size> class myuint {
                         myuint<U/2>* x = reinterpret_cast<myuint<U/2>*>(that.data[0]);
                         *this = *x;
                     } else {
-                        memcpy(data[0], that.data[0], Size/8);
+                        uint64_t x;
+                        memcpy(&x, that.data[0], Size<8? 1:Size/8);
+
+                        uint8_t mask = pow(2,Size)-1;
+                        x &= mask;
+                        memcpy(data[0], &x, Size<8? 1:Size/8);
+
                     }
                 }
             }
@@ -711,10 +722,11 @@ template <char16_t Size> class myuint {
             
             T x = 0;
             T y = 0;
+            
+            size_t size = sizeof(T)>=Size/16? Size/16:sizeof(T);
 
             if (Size > 128) { //Recursive Definition
 
-                size_t size = sizeof(T)>=Size/16? Size/16:sizeof(T);
                 assert(data[0] != nullptr && data[1] != nullptr);
 
                 myuint<Size/2>* a = nullptr;
@@ -731,26 +743,26 @@ template <char16_t Size> class myuint {
                 x |= y;
                 
 
-            } else { //Base Case (Size == 1 | 2 | 4 | 8 | 16 | 32 | 64)
+            } else { //Base Case (Size == 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128)
 
                 if (data[0]) {
                     if (Size < 8) {
                         memcpy(&x, data[0], 1);
-                        
-                        //Only leave first Size bits in x.
                         uint8_t mask = pow(2,Size)-1;
                         x &= mask;
+
                     }
                     else {
-                        memcpy(&x, data[0], Size/8);
+                        memcpy(&x, data[0], size);
                     }
+
                 }
                 
                 //If there's more data to add and there is space left to add some or all of it in T.
                 if (Size > 64 && data[1] && sizeof(T) > sizeof(data[0])) {
-                    memcpy(&y, data[1], Size/8);
+                    memcpy(&y, data[1], size);
                     
-                    y <<= Size; 
+                    y <<= size;  //TODO: REMOVE WARNING
                     x |= y; 
                 }
 
