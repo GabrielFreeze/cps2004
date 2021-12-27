@@ -264,7 +264,7 @@ template <char16_t Size> class myuint {
         template <char16_t U>
         inline myuint<Size>& operator = (const myuint<U>& that) {
             //Ensure object is not self.
-            if ((myuint<U>*)this == &that)
+            if ((myuint<U>*)this == &that) //TODO: See if you have to change this if function because of references and memlocs.
                 return *this;
 
             //TODO: CHECK WHERE THE VALGRIND ERROR IS HAPPENING
@@ -274,6 +274,7 @@ template <char16_t Size> class myuint {
             //Create new heap memory.
             alloc(Size);
             
+
             //Copy objects from that into this.
             if (Size > 128 && U > 128) {
                 if (data[0] && that.data[0]) {
@@ -302,8 +303,8 @@ template <char16_t Size> class myuint {
                         myuint<64> y(y_buf);
 
                         // if (Size/4 != 64)
-                            *x = y; //in the equal operator for same size, *x has data[0] as null.
-
+                        *x = y; //in the equal operator for same size, *x has data[0] as null.
+                        
                         
 
                         data[0] = reinterpret_cast<void*>(x);
