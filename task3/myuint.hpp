@@ -8,17 +8,17 @@
 #include <iostream>
 
 
-template <uint16_t S> class myuint {
+template <uint16_t S = 64> class myuint {
       
     public:
 
+        static_assert(S == 1  || S == 2   || S == 4    || S == 8 || S == 16
+                    || S == 16 || S == 32  || S == 64   || S == 128 
+                    || S == 256|| S == 512 || S == 1024 || S == 2048,
+                    "Size of myuint must be a power of 2 and in the range [1,2048].");
         uint8_t* data = new uint8_t[get_size()]{0};
 
         myuint(uint64_t num = 0) {
-            static_assert(S == 1  || S == 2   || S == 4    || S == 8 || S == 16
-                       || S == 16 || S == 32  || S == 64   || S == 128 
-                       || S == 256|| S == 512 || S == 1024 || S == 2048,
-                       "Size of myuint must be a power of 2 and in the range [1,2048].");
 
             uint16_t size = get_size();
 
@@ -39,6 +39,7 @@ template <uint16_t S> class myuint {
 
         ~myuint() {
             delete[] data;
+            data = nullptr;
         }
 
         //Returns the size in bytes
@@ -50,7 +51,10 @@ template <uint16_t S> class myuint {
         //COPY CONSTRUCTOR
         myuint(const myuint& that) {
             uint16_t size = get_size();
-            data = new uint8_t[size]{0};
+
+            if (data == nullptr)
+                data = new uint8_t[size]{0};
+
             for (uint16_t i = 0; i < size; i++) {
                 data[i] = that.data[i];  
             }
@@ -67,10 +71,11 @@ template <uint16_t S> class myuint {
           
         //MOVE ASSIGNMENT
         myuint& operator = (myuint&& that) noexcept{
+            
             if (this == &that)
                 return *this;
-
-            delete[] data;
+            if (data != nullptr)
+                delete[] data;
 
             data = that.data;
             that.data = nullptr;
@@ -85,8 +90,10 @@ template <uint16_t S> class myuint {
 
             uint16_t size = get_size();
 
-            delete[] data;
-            data = new uint8_t[size]{0};
+            if (data != nullptr) {
+                delete[] data;
+                data = new uint8_t[size]{0};
+            }
 
             for (uint16_t i = 0; i < size; i++) {
                 data[i] = that.data[i];
@@ -102,8 +109,10 @@ template <uint16_t S> class myuint {
 
             uint16_t size = get_size()>that.get_size()? that.get_size():get_size();
 
-            delete[] data;
-            data = new uint8_t[get_size()]{0};
+            if (data != nullptr) {
+                delete[] data;
+                data = new uint8_t[get_size()]{0};              
+            }
 
             for (uint16_t i = 0; i < size; i++) {
                 data[i] = that.data[i];
@@ -117,7 +126,7 @@ template <uint16_t S> class myuint {
 
         }
 
-        template <typename T> T convert_to() {
+        template <typename T> T convert_to() const{
             T x = 0;
             uint16_t size = get_size()>sizeof(T)? sizeof(T):get_size();
         
@@ -129,6 +138,42 @@ template <uint16_t S> class myuint {
             
         }
 
+
+        friend myuint operator % (myuint<S> lhs, const int64_t& rhs) {
+            return lhs % myuint<64>(rhs);
+        }
+        template <uint16_t U> friend myuint operator % (myuint<S> lhs, const myuint<U>& rhs) {
+            lhs %= rhs;
+            return lhs;
+        }
+        inline myuint& operator %= (const uint64_t& rhs) {
+            return *this %= myuint<64>(rhs);
+        }    
+        template <uint16_t U> inline myuint& operator %= (const myuint<U>& rhs) {
+            //Restoring Division Algorithm for Unsigned Integers.
+            
+            if (rhs == 0)
+                return *this;
+
+            myuint q,r; //Quotient, Remainder.
+
+            uint16_t max = pow(2,16)-1;
+
+            //For every bit in this
+            for (uint16_t i = get_size()*8 -1; i != max; i--) {
+                r <<= 1;
+                r.set_bit(0,this->get_bit(i));
+
+                if (r >= rhs) {
+                    r -= rhs;
+                    q.set_bit(i,1);
+                }
+            }
+
+            return *this = r;
+        }
+
+
         friend myuint operator / (myuint<S> lhs, const int64_t& rhs) {
             return lhs / myuint<64>(rhs);
         }
@@ -138,28 +183,29 @@ template <uint16_t S> class myuint {
         }
         inline myuint& operator /= (const uint64_t& rhs) {
             return *this /= myuint<64>(rhs);
-        }
+        }    
         template <uint16_t U> inline myuint& operator /= (const myuint<U>& rhs) {
-            myuint<S> a = 0;
-            uint16_t n = a.get_size()*8 +1;
+            //Restoring Division Algorithm for Unsigned Integers.
+            assert(rhs); //Division by 0 is not allowed.
 
-            //Restoring division algorithm with unsigned integers.
-            while (--n) {
-                a << 1;
-                *this << 1;
-                a -= rhs;
+            myuint q,r; //Quotient, Remainder.
 
-                if (a.get_bit(S-1)) {
-                    this->set_bit(0,0);
-                    a += rhs;
-                } else  this->set_bit(0,1);
+            uint16_t max = pow(2,16)-1;
+
+            //For every bit in this
+            for (uint16_t i = get_size()*8 -1; i != max; i--) {
+                r <<= 1;
+                r.set_bit(0,this->get_bit(i));
+
+                if (r >= rhs) {
+                    r -= rhs;
+                    q.set_bit(i,1);
+                }
             }
-            return *this;
+
+            return *this = q;
         }
         
-
-
-
         friend myuint operator * (myuint<S> lhs, const int64_t& rhs) {
             return lhs * myuint<64>(rhs);
         }
@@ -179,7 +225,6 @@ template <uint16_t S> class myuint {
             }
             return *this;
         }
-        
 
         //Postfix decrement.
         inline myuint operator -- (int) {
@@ -224,7 +269,7 @@ template <uint16_t S> class myuint {
         friend myuint operator + (myuint<S> lhs, const int64_t& rhs) {
             return lhs + myuint<64>(rhs);
         }
-        template <uint16_t U> friend myuint<2048> operator + (myuint<S> lhs, const myuint<U>& rhs) {
+        template <uint16_t U> friend myuint<2048> operator + (const myuint<S>& lhs, const myuint<U>& rhs) {
             myuint<2048> a = lhs;
             a += rhs;
             return a;
@@ -262,23 +307,23 @@ template <uint16_t S> class myuint {
             return *this;
         }
 
-        template <uint8_t U> inline myuint& get_bit(myuint<U> n) const{
+        template <uint16_t U> inline uint8_t get_bit(const myuint<U>& n) const{
             return get_bit(n.template convert_to<uint16_t>());
         }
-        inline uint8_t get_bit(uint16_t n) const{
+        inline uint16_t get_bit(const uint16_t n) const{
             assert(n < S);
             uint8_t m = (n & ~7) >> 3;
             return (data[m] >> (n-(m<<3))) & 1;
         }
 
 
-        template <uint8_t U, uint8_t R> myuint& set_bit(myuint<U> n, myuint<R> x) {
+        template <uint16_t U, uint8_t R> myuint& set_bit(myuint<U> n, myuint<R> x) {
             return set_bit(n.template convert_to<uint16_t>(), x);
         }
-        template <uint8_t U> myuint& set_bit(uint16_t n, myuint<U> x) {
+        template <uint16_t U> myuint& set_bit(uint16_t n, myuint<U> x) {
             return set_bit(n,x.template convert_to<uint8_t>());
         }
-        template <uint8_t U> myuint& set_bit(myuint<U> n, uint8_t x) {
+        template <uint16_t U> myuint& set_bit(myuint<U> n, uint8_t x) {
             return set_bit(n.template convert_to<uint16_t>(),x);
         }
         inline myuint& set_bit(uint16_t n, uint8_t x) {
@@ -319,11 +364,11 @@ template <uint16_t S> class myuint {
                 return lhs >> myuint<64>(num);
             else return lhs;
         }
-        template <uint16_t U> friend myuint& operator >> (myuint<S> lhs, const myuint<U>& rhs) {
+        template <uint16_t U> friend myuint operator >> (myuint<S> lhs, const myuint<U>& rhs) {
             lhs >>= rhs;
             return lhs;
         }
-        template <uint16_t U> inline myuint& operator >>= (myuint<U>& rhs) {
+        template <uint16_t U> inline myuint& operator >>= (const myuint<U>& rhs) {
             if (rhs) {
                 if (rhs < S) {
                     
@@ -370,11 +415,11 @@ template <uint16_t S> class myuint {
                 return lhs << myuint<64>(num);
             else return lhs;
         }
-        template <uint16_t U> friend myuint& operator << (myuint<S> lhs, const myuint<U>& rhs) {
+        template <uint16_t U> friend myuint operator << (myuint<S> lhs, const myuint<U>& rhs) {
             lhs <<= rhs;
             return lhs;
         }
-        template <uint16_t U> inline myuint& operator <<= (myuint<U>& rhs) {
+        template <uint16_t U> inline myuint& operator <<= (const myuint<U>& rhs) {
             if (rhs) {
 
                 if (rhs < S) {
@@ -464,22 +509,22 @@ template <uint16_t S> class myuint {
             return lhs;
         }
 
-        explicit inline operator bool() {
+        explicit inline operator bool() const{
             return *this != 0;
         }
 
-        inline bool operator != (const int& that) {
+        inline bool operator != (const int& that) const {
             return !(*this == myuint<64>(that));
         }       
         template <uint16_t U>
-        inline bool operator != (const myuint<U>& that) {
+        inline bool operator != (const myuint<U>& that) const {
             return !(*this == that);
         }
-        inline bool operator == (const int& that) {
+        inline bool operator == (const int& that) const {
             return *this == myuint<64>(that);
         }   
         template <uint16_t U>
-        inline bool operator == (const myuint<U>& that) {    
+        inline bool operator == (const myuint<U>& that) const {    
             uint16_t size = (get_size()>that.get_size()? get_size():that.get_size());
 
             for (int i = 0; i < size; i++) {
@@ -496,17 +541,17 @@ template <uint16_t S> class myuint {
 
 
         template <uint16_t U>
-        inline bool operator >= (const myuint<U>& rhs) {
+        inline bool operator >= (const myuint<U>& rhs) const {
             return (*this == rhs) || (*this > rhs);
         }
-        inline bool operator >= (const int& rhs) {
+        inline bool operator >= (const int& rhs) const {
             return *this >= myuint<64>(rhs);
         }
-        inline bool operator > (const int& rhs) {
+        inline bool operator > (const int& rhs) const {
             return *this > myuint<64>(rhs);
         }
         template <uint16_t U>
-        inline bool operator > (const myuint<U>& that) {
+        inline bool operator > (const myuint<U>& that) const {
             uint16_t size = (get_size()>that.get_size()? get_size():that.get_size());
 
             for (int i = size-1; i >= 0; i--) {
@@ -526,17 +571,17 @@ template <uint16_t S> class myuint {
         }
 
         template <uint16_t U>
-        inline bool operator <= (const myuint<U>& that) {
+        inline bool operator <= (const myuint<U>& that) const {
             return (*this == that) || (*this < that);
         }
-        inline bool operator <= (const int& that) {
+        inline bool operator <= (const int& that) const {
             return *this <= myuint<64>(that);
         }
-        inline bool operator < (const int& that) {
+        inline bool operator < (const int& that) const {
             return *this < myuint<64>(that);
         }
         template <uint16_t U>
-        inline bool operator < (const myuint<U>& that) {
+        inline bool operator < (const myuint<U>& that) const {
             uint16_t size = (get_size()>that.get_size()? get_size():that.get_size());
 
             for (int i = size-1; i >= 0; i--) {
