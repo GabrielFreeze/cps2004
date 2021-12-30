@@ -2,9 +2,9 @@
 
 #include <string>
 #include <vector>
-#include <unordered_set>
-#include <memory>
-#include <cassert>
+#include <unordered_set>    
+#include <memory>   
+#include <cassert>  
 #include "edge.hpp"
 #include "node.hpp"
 
@@ -43,10 +43,11 @@ template <typename N> class Dag {
             std::cout << std::endl;
         }
 
-        void addNode(std::shared_ptr<Node<N>>* nodes, int size) {
+        int addNode(std::shared_ptr<Node<N>>* nodes, int size) {
             for (int i = 0; i < size; i++){
                 addNode(nodes[i]);
             }
+            return numNodes;
         }
         int addNode(std::shared_ptr<Node<N>> node) {
             if (!node) throw std::invalid_argument("Argument passed is a Null Pointer.");
@@ -76,7 +77,7 @@ template <typename N> class Dag {
             nodes.push_back(node);
             checkCycle();
 
-            return 0;
+            return numNodes;
         }
 
         std::vector<std::shared_ptr<Node<N>>> getSuccessors(std::shared_ptr<Node<N>> node){
@@ -167,19 +168,30 @@ template <typename N> class Dag {
             addNode(edge->from);
             addNode(edge->to);
 
-            //Declare a connection between these nodes.
-            table[edge->from->index][edge->to->index] = ++numEdges;
+            //The 2 nodes already have an edge.
+            if (table[edge->from->index][edge->to->index]) {
+                auto i = std::move(edge); //Lose the pointer, since an existing one exactly like it already exists.
+            } else {
+                //Declare a connection between these nodes.
+                table[edge->from->index][edge->to->index] = ++numEdges;
 
-            //Move edge to vector of edges.
-            edges.push_back(std::move(edge));
-            
-            checkCycle();
+                //Move edge to vector of edges.
+                edges.push_back(std::move(edge));
+                
+                checkCycle();
+            }
+
             return numEdges;
 
         }
         
         int removeEdge(std::shared_ptr<Node<N>> from, std::shared_ptr<Node<N>> to) {
             if (!from || !to) throw std::invalid_argument("Argument passed is a Null Pointer.");
+
+            //The nodes referred to by the edge are not in the graph.
+            if (from->index == -1 || to->index == -1)
+                return numEdges;
+            
 
             //Get the index of the edge describing this connection
             int index = table[from->index][to->index]-1;
@@ -201,7 +213,7 @@ template <typename N> class Dag {
             return --numEdges;
         }
        
-        std::vector<std::unique_ptr<Edge<N>>>& getEdges(){
+        const std::vector<std::unique_ptr<Edge<N>>>& getEdges(){
             return edges;
         }
     
