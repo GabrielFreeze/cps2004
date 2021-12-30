@@ -18,5 +18,3 @@ template <typename N> class Node {
         int index = -1;
 }; 
 
-//Initialise static variable count
-// template <typename N> int Node<N>::count = 0; 

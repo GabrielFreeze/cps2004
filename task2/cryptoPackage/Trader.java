@@ -34,7 +34,6 @@ public class Trader extends User{
         //In a real world application, a bank's API will handle the transferring of cash.
         //However, just as a proof of concept, fiat currencies can simply be added regardless.
         //Checks with the bank can be made in this function.
-        // assertLogin();
     
         int fiatIndex = -1;
 
@@ -60,7 +59,6 @@ public class Trader extends User{
     protected void addCrypto(double amount, Crypto cryptoToAdd) throws java.lang.Error {
         //Assume that when a trader addsCrypto he is merely transfering the crypto coins from another wallet into the current one.
         //A real world application can handle the transfer in this function. 
-        // assertLogin();
         
         int cryptoIndex = -1;
 
@@ -107,8 +105,6 @@ public class Trader extends User{
 
     public double getBalance(Coin coin) throws java.lang.Error{
         
-        // assertLogin();
-
         int indexFiat = existsFiat(coin);
         int indexCrypto = existsCrypto(coin);
 
@@ -148,7 +144,8 @@ public class Trader extends User{
         //limit: What should be the price of crypto before the order is available for execution.
 
         if (existsCrypto(crypto) < 0) throw new Exception("Trader is attempting to buy with a crypto currency he does not own.");
-        
+        if (amount < 0) throw new Exception("Trader "+this+" put negative quanatity for an order.");
+
         LimitOrder order = new LimitOrder(this, OrderType.SELL, round(amount, crypto.getDecimals()), crypto, fiat, limit);
         
         orderBook.pushOrder(order);
@@ -165,7 +162,8 @@ public class Trader extends User{
         //fiat: What fiat currency will he get.
 
         if (existsCrypto(crypto) < 0) throw new Exception("Trader is attempting to sell with a fiat currency he does not own.");
-
+        if (amount < 0) throw new Exception("Trader "+this+" put negative quanatity for an order.");
+        
         MarketOrder order = new MarketOrder(this, OrderType.SELL, round(amount, crypto.getDecimals()), crypto, fiat);
         
         orderBook.pushOrder(order);
@@ -186,6 +184,7 @@ public class Trader extends User{
 
         //Check that fiat is valid
         if (existsFiat(fiat) < 0) throw new Exception("Trader is attempting to buy with a fiat currency he does not own.");
+        if (amount < 0) throw new Exception("Trader "+this+" put negative quanatity for an order.");
         
         MarketOrder order = new MarketOrder(this, OrderType.BUY, round(amount, crypto.getDecimals()), crypto, fiat);
         
@@ -207,7 +206,8 @@ public class Trader extends User{
         //limit: What should be the price of crypto before the order is available for execution.
 
         if (existsFiat(fiat) < 0) throw new Exception("Trader is attempting to buy with a fiat currency he does not own.");
-        
+        if (amount < 0) throw new Exception("Trader "+this+" put negative quanatity for an order.");
+
         LimitOrder order = new LimitOrder(this, OrderType.BUY, round(amount, crypto.getDecimals()), crypto, fiat, limit);
         
         orderBook.pushOrder(order);
@@ -273,16 +273,19 @@ public class Trader extends User{
     public Boolean getApproved() {
         return approved;
     }
-    public Boolean setApproved(Boolean approved, Admin admin) {
+    public Boolean setApproved(Boolean approved, Admin admin) throws Exception{
 
-        if (!registered || admin.getTraderToApprove() != this)
-            return false;
+        if (!registered)
+            throw new Exception("Trader " + this + " cannot be approved by " + admin + " because Trader is not registered.");
+
+        if (admin.getTraderToApprove() != this)
+            throw new Exception("Trader " + this + " cannot be approved by " + admin + " because admin did not approve Trader.");
         
         this.approved = approved;
         return true;
 
     }
     public void assertApproved() throws IllegalAccessException {
-        if (!approved) throw new IllegalAccessException("User must be approbef to perform this action.");
+        if (!approved) throw new IllegalAccessException("User must be approved to perform this action.");
     }
 }

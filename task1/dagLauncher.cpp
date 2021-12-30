@@ -1,27 +1,8 @@
 #include <iostream>
-#include <unordered_set>
 #include "dag.hpp"
 using namespace std;
 
-/*
-    TODO: Make all node raw pointers to shared pointers.
-*/
 
-
-/*
- The return type of addX() will be 0 if X was new, 1 if X was already in the graph.
- Therefore caling addX() will not only add X but will tell you wether X was already present or not.
-
- 0 -> expected behaviour
- 1 -> deviant behaviour
-
- Code can then be structured like so: 
-    
-    if (function()) {
-        ...function did not exit normally...
-    }
-
-*/
 int main() {
     
     /*  
@@ -148,8 +129,10 @@ int main() {
     cout << "Could not add E->A because of cycles" << endl << endl;
 
     //View all current edges
-    vector<unique_ptr<Edge<char>>>& edgesRef = dag.getEdges();
+    const vector<unique_ptr<Edge<char>>>& edgesRef = dag.getEdges();
     cout << "Final edges: " << endl;
-    for (auto it = edgesRef.begin(); it != edgesRef.end(); it++)
+    for (auto it = edgesRef.begin(); it != edgesRef.end(); it++) {
         cout << (*it)->from->val << " -> " << (*it)->to->val << endl;
+    }
+    
 }

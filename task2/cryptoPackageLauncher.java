@@ -34,14 +34,18 @@ class cryptoPackageLauncher {
             //Traders register for approval
             trader.setRegistered(true);
             joe.setRegistered(true);
+            baba.setRegistered(true);
     
             //Admin approved traders.
-            admin.setTraderToApprove(trader);
-            admin.setTraderToApprove(joe);
-
             //Traders must accept approval and reference the admin that approved them..
+            admin.setTraderToApprove(trader);
             trader.setApproved(true, admin);
+            
+            admin.setTraderToApprove(joe);
             joe.setApproved(true, admin);
+
+            admin.setTraderToApprove(baba);
+            baba.setApproved(true, admin);
 
             
         } catch (Exception e) {System.out.println(e.getMessage());}
@@ -82,7 +86,7 @@ class cryptoPackageLauncher {
             The launcher file should not have access to add funds to a trader's account
             without the neccessary checks such as being logged in and approved.
             However I created a dummy method for demonstration purposes, as I wanted to show
-            trades between 2 traders..*/
+            trades between 2 traders.*/
 
             joe._addCrypto(200, btc);
             joe._addCrypto(100, doge);
@@ -169,6 +173,7 @@ class cryptoPackageLauncher {
             */
 
             System.out.println(e.getMessage());
+            System.exit(0);
         }
         
         //  __  __                  _____                           _
@@ -206,8 +211,8 @@ class cryptoPackageLauncher {
         /*An order also keeps track of which traders executed it. */
         try {
             Order order = orderBook.getOrder(orderID);
-            ArrayList<Trader> tradersMatched = order.getTradersMatched();
-            ArrayList<Double> tradersMatchedBalance = order.getTradersMatchedBalance();
+            ArrayList<Trader> tradersMatched = order.getMatchedTraders();
+            ArrayList<Double> tradersMatchedBalance = order.getMatchedTradersBalance();
 
             for (int i = 0; i < tradersMatched.size(); i++) {
                 System.out.println("Trader " + tradersMatched.get(i).getUsername() +
@@ -219,5 +224,15 @@ class cryptoPackageLauncher {
         
         trader.logout();
         admin.logout();
+        baba.logout();
+
+        //If a trader logs out, he is unable to perform actions.
+        try {
+            trader.buy(10,btc,euro);
+            System.out.println("Order confirmed.");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
     }
 }

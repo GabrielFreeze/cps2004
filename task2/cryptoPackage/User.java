@@ -22,7 +22,7 @@ public abstract class User implements java.io.Serializable{
     }
 
     public void assertLogin() throws IllegalAccessException {
-        if (!login) throw new IllegalAccessException("User must be logged in to perform this action.");
+        if (!login) throw new IllegalAccessException("User "+this+" must be logged in to perform this action.");
     }
 
     public String getUsername() {

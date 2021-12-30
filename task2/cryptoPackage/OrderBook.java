@@ -1,6 +1,5 @@
 package cryptoPackage;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class OrderBook {
     protected ArrayList<Order> orderBook = new ArrayList<Order>();
@@ -31,7 +30,7 @@ public class OrderBook {
     protected ArrayList<Order> copyOrderBook() {
         
         ArrayList<Order> copy = new ArrayList<Order>();
-        Collections.copy(copy,orderBook);
+        copy.addAll(orderBook);
 
         return copy;
     }

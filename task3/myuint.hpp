@@ -10,13 +10,15 @@
 
 template <uint16_t S = 64> class myuint {
       
-    public:
 
+    private:
+        uint8_t* data = new uint8_t[get_size()]{0};
+
+    public:
         static_assert(S == 1  || S == 2   || S == 4    || S == 8 || S == 16
                     || S == 16 || S == 32  || S == 64   || S == 128 
                     || S == 256|| S == 512 || S == 1024 || S == 2048,
                     "Size of myuint must be a power of 2 and in the range [1,2048].");
-        uint8_t* data = new uint8_t[get_size()]{0};
 
         myuint(uint64_t num = 0) {
 

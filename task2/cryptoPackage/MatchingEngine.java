@@ -98,10 +98,8 @@ public class MatchingEngine {
         return 0;
     }
 
-
-    private void matchOrders(Order buy, Order sell) {
-        
     
+    private void matchOrders(Order buy, Order sell) {
         
         //The amount which should be subtracted from each order
         double amount = sell.getQuantityRemaining() > buy.getQuantityRemaining()? buy.getQuantityRemaining() : sell.getQuantityRemaining();

@@ -19,7 +19,7 @@ public class Order {
     private OrderStatus status = OrderStatus.UNFILLED;
 
     protected Order(Trader trader, OrderType type, double quantity, Crypto from, Fiat to){
-        this.quantity = quantity;
+        this.quantity = quantity >= 0? quantity:0;
         this.quantityRemaining = quantity;
         this.trader = trader;
         this.type = type;
@@ -38,14 +38,21 @@ public class Order {
     public Trader getTrader() {
         return trader;
     }
-    protected ArrayList<Trader> getMatchedTraders() {
+    public ArrayList<Trader> getMatchedTraders() {
         
         ArrayList<Trader> copy = new ArrayList<Trader>();
         Collections.copy(copy, matchedTraders);
         
         return copy;
     }
-    protected void addMatchedTrader(Trader trader, double amount) {
+    public ArrayList<Double> getMatchedTradersBalance() {
+        
+        ArrayList<Double> copy = new ArrayList<Double>();
+        Collections.copy(copy, matchedTradersBalance);
+        
+        return copy;
+    }
+    public void addMatchedTrader(Trader trader, double amount) {
         
         //Find if trader is already in list
 
@@ -61,6 +68,7 @@ public class Order {
         if (index == -1) {
             index = matchedTraders.size();
             matchedTraders.add(trader);
+            matchedTradersBalance.add(0.0);
         }
 
         //Update quantity for found matched trader.
@@ -98,12 +106,5 @@ public class Order {
 
     }
     
-    public ArrayList<Trader> getTradersMatched() {
-        return matchedTraders;
-    }
-
-    public ArrayList<Double> getTradersMatchedBalance() {
-        return matchedTradersBalance;
-    }
 
 }
