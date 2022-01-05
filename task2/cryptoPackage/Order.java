@@ -90,10 +90,10 @@ public class Order {
     protected OrderStatus getStatus() {
         return status;
     }
-    protected int getId() {
+    public int getId() {
         return id;
     }
-    protected double getVolumeExecuted() {
+    public double getVolumeExecuted() {
         return volumeExecuted;
     }
 

@@ -54,7 +54,7 @@ template <typename N> class Dag {
            
             //If node is already in graph, return -1.
             if (exists(node))
-                return -1;
+                return numNodes;
 
             node->index = numNodes++;
 
@@ -99,7 +99,7 @@ template <typename N> class Dag {
             if (!node) throw std::invalid_argument("Argument passed is a Null Pointer.");
             
             //Return -1 in case of non-existent node
-            if (!exists(node)) return -1;
+            if (!exists(node)) return numNodes;
 
             //Remove any edges that relied on the node being deleted
             for (auto it = edges.begin(); it != edges.end(); it++) {
@@ -137,7 +137,7 @@ template <typename N> class Dag {
                 (*it)->index--;
             }
 
-            return 0;
+            return numNodes;
 
         }
         
@@ -215,6 +215,13 @@ template <typename N> class Dag {
        
         const std::vector<std::unique_ptr<Edge<N>>>& getEdges(){
             return edges;
+        }
+
+        int getNumNodes() {
+            return numNodes;
+        }
+        int getNumEdges() {
+            return numEdges;
         }
     
     private:

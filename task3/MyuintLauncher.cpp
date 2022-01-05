@@ -9,6 +9,9 @@ int main() {
     myuint<128> i(10);
     myuint<2048> j(20);
     myuint<16>    k(20);
+
+    unsigned short r = (j/i).convert_to<uint64_t>();
+    cout << "r =" << r << endl;
     
     cout << "\nSetting i = j\n";
     i = j;
@@ -173,18 +176,8 @@ int main() {
 
     cout << "\nFinding the multiples of 3\n";
     for (myuint i = 0; i <  20; i++) {
-        cout << i.convert_to<uint16_t>() << (i%3? " Is Not ":" Is ") << "Dividible by 3\n";
+        cout << i.convert_to<uint16_t>() << (i%3? " Is Not ":" Is ") << "Divisible by 3\n";
     }
-
-    i = 110;
-    j = (i >> 0) & 1;
-    x = j.convert_to<uint16_t>();
-    printf("%d\n",x); 
-    
-    j = i.get_bit(0);
-    x = j.convert_to<uint16_t>();
-    printf("%d\n",x); //10
-
 
     return 0;
 }

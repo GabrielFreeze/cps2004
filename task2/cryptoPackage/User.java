@@ -3,7 +3,7 @@ package cryptoPackage;
 public abstract class User implements java.io.Serializable{
     protected String username;
     protected String password;
-    protected Boolean login;
+    protected Boolean login = false;
 
 
     public User(String username, String password) {

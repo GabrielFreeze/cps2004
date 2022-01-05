@@ -9,7 +9,7 @@ conclude that C++ is actually turing complete. Wow.*/
 #define BOARD_CAP 70
 using namespace std;
 
-myuint<8> board[BOARD_CAP]{0};
+myuint<1> board[BOARD_CAP]{0};
 
 int main(void) {
 

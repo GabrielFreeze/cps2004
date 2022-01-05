@@ -1,48 +1,50 @@
-// #include <iostream>
-// #include <memory>
-// #include <vector>
-
-// using namespace std;
-
-// //Directed Acyclic Graph Node
-// typedef struct Node {
-//     int data;
-// } Node;
+#include <iostream>
+#include "dag.hpp"
+using namespace std;
 
 
-// typedef struct Edge {
-//     Node& from;
-//     Node& to;
-// } Edge;
+int main() {
 
-// typedef struct Graph {
-//     unique_ptr<Node> node1;
-//     unique_ptr<Node> node2;
-
-// } Graph;
-
-
-// int main() {
-
-//     unique_ptr<Node> A(new Node{1});
-//     unique_ptr<Node> B(new Node{2});
-//     unique_ptr<Node> C(new Node{3});
-
-//     Edge edge1 = {*A, *B};
-//     Edge edge2 = {*B, *C};
-//     Edge edge3 = {*C, *A};
-
-//     cout << edge1.from.data << endl;
-//     cout << edge1.to.data << endl;
-//     cout << edge2.from.data << endl;
+    auto A = make_shared<Node<char>>('A'); 
+    auto D = make_shared<Node<char>>('D');
+    auto B = make_shared<Node<char>>('B'); 
+    auto C = make_shared<Node<char>>('C'); 
     
-//     Graph dag = {move(edge1.from), move(edge1.t)};
+    auto A_B = make_unique<Edge<char>>(Edge<char>{A, B});
+    auto B_C = make_unique<Edge<char>>(Edge<char>{B, C});
+    auto C_D = make_unique<Edge<char>>(Edge<char>{C, D});
+    auto C_A = make_unique<Edge<char>>(Edge<char>{C, A});
+    
+    unique_ptr<Edge<char>> edges[2] = {move(A_B), move(B_C)};
 
-//     cout << edge2.from.data << endl;
-//     cout << edge1.from.data << endl;
-//     cout << edge1.to.data << endl;
+    Dag<char> dag(edges, sizeof(edges)/sizeof(edges[0]));
+    assert(dag.addNode(A) == 3);
+    assert(dag.addNode(B) == 3);
+    assert(dag.addNode(C) == 3);
+    assert(dag.addNode(D) == 4);
+    assert(dag.getNumNodes() == 4);
 
-//     return 0;
-// }
+    assert(dag.getSuccessors(A)[0] == B);
+    assert(dag.getSuccessors(dag.getSuccessors(A)[0])[0] == C);
+    assert(dag.getSuccessors(C).empty());
 
+    assert(dag.getNumEdges() == 2);
+    assert(dag.addEdge(move(C_D)) == 3);
+    assert(dag.getNumEdges() == 3);
 
+    assert(!dag.getSuccessors(C).empty());
+    assert(dag.getSuccessors(C)[0] == D);
+
+    assert(dag.getSuccessors(D).empty());
+
+    assert(dag.removeNode(D) == 3);
+    assert(dag.getNumEdges() == 2);
+
+    try {
+        dag.addEdge(move(C_A));
+        assert(0 && "Cycles not detected in dag\n");    
+    } catch (...) {dag.removeEdge(C,A);}
+    
+    cout << "All Unit Tests Worked!\n";
+
+}

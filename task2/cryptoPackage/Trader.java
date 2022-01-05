@@ -22,6 +22,7 @@ public class Trader extends User{
     public Trader(String username, String password) {
         super(username, password);
         registered = false;
+        approved = false;
         matchingEngine = MatchingEngine.getInstance();
         orderBook = OrderBook.getInstance();
     }
@@ -286,6 +287,6 @@ public class Trader extends User{
 
     }
     public void assertApproved() throws IllegalAccessException {
-        if (!approved) throw new IllegalAccessException("User must be approved to perform this action.");
+        if (this.approved == false) throw new IllegalAccessException("Trader "+this+" must be approved to perform this action.");
     }
 }
