@@ -4,3 +4,6 @@ build
 git-creds
 
 *.class
+
+#Do not upload the unfinished version of task3
+proto

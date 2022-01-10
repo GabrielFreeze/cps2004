@@ -388,16 +388,6 @@ template <uint16_t S = 64> class myuint {
         }
         template <uint16_t U> inline myuint& operator >>= (const myuint<U>& rhs) {
             
-            if (S < 128 && U < 128) {
-                uint64_t x = 0;
-                uint64_t y = 0;
-                memcpy(&x, data, get_size());
-                memcpy(&y, rhs.data, rhs.get_size());
-                x >>= y;
-                memcpy(data, &x, get_size());
-                return *this;
-            }
-
             if (rhs) {
                 if (rhs < S) {
                     
@@ -450,16 +440,6 @@ template <uint16_t S = 64> class myuint {
             return lhs;
         }
         template <uint16_t U> inline myuint& operator <<= (const myuint<U>& rhs) {
-            
-            if (S < 128 && U < 128) {
-                uint64_t x = 0;
-                uint64_t y = 0;
-                memcpy(&x, data, get_size());
-                memcpy(&y, rhs.data, rhs.get_size());
-                x <<= y;
-                memcpy(data, &x, get_size());
-                return *this;
-            }
        
             if (rhs) {
                 if (rhs < S) {
