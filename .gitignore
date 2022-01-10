@@ -7,3 +7,7 @@ git-creds
 
 #Do not upload the unfinished version of task3
 proto
+
+#No .doc(x) files
+*.docx
+*.doc
