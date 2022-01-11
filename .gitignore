@@ -9,5 +9,5 @@ git-creds
 proto
 
 #No .doc(x) files
-*.docx
-*.doc
+*.doc*
+
